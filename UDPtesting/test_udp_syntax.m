@@ -39,6 +39,14 @@ fprintf(u,'rSet(''dXtarget'',myTarg2,''visible'',true);');
 fprintf(u,'draw_flag=1;');
 
 % wait for response
+val     = getvalue(parport);
+decval  = bin2dec(num2str(val));
+d       = decval %debug - print value from line
+
+while d == decval
+    val     = getvalue(parport);
+    decval  = bin2dec(num2str(val));
+end
 
 fprintf(u,'draw_flag=0;');
 fprintf(u,'rGraphicsBlank;');
