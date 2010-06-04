@@ -2,7 +2,7 @@ function welcome_quest();
 
 
 try
-  lnsp = -1;  
+    lnsp = -1;  
     str = {};
     x_pos = {};
     str{1} = 'Welcome';
@@ -24,23 +24,29 @@ try
 
     fontsize = 22;
     fontsize = 30;    
-    
+
     for i = 1:length(str)
         textwidth = fontsize*length(str{i})/ppd_;
 %         x_pos{i} = -textwidth/pi;
         x_pos{i} = -0.3*textwidth;
-
     end
-    
+
     y = -ceil(length(str)/2):floor(length(str)/2);
     if length(y)>length(str)
-      y = y(1:length(str));
+        y = y(1:length(str));
     end
     y = y*lnsp;
-    
+
     % show a normal text, and
     %   try to make another that looks good on mono++
-    indices = rAdd('dXtext', length(str), 'visible', true,'x', x_pos, 'y', num2cell(y), 'size', fontsize,'font', 'Courier','bold', true,'color', [1 1 1]*255,'string', str );
+    indices = rAdd('dXtext', length(str), ...
+        'visible', true, ...
+        'x', x_pos, 'y', num2cell(y), ...
+        'size', fontsize, ...
+        'font', 'Courier', ...
+        'bold', true, ...
+        'color', [1 1 1]*255, ...
+        'string', str );
 
     spacekey = 44; % Only accept a space as the command to quit:
     [ keySecs, myKeyCode ] = rGraphicsDrawSelectiveBreakMulti(inf,[],spacekey);
@@ -51,7 +57,7 @@ try
     rSet('dXtext',indices,'visible',false);
     rGraphicsDraw;
 
-    
+
     str = {};
     x_pos = {};
     str{1} = 'When you score a point, you''ll hear a sound, and';
@@ -74,7 +80,7 @@ try
         'color', [1 1 1]*255, ...
         'string', str );
 
-%     rGraphicsDraw(inf)
+    %     rGraphicsDraw(inf)
     spacekey = 44; % Only accept a space as the command to quit:
     [ keySecs, myKeyCode ] = rGraphicsDrawSelectiveBreakMulti(inf,[],spacekey);
     while KbCheckMulti
@@ -82,7 +88,7 @@ try
     end
     %     KbWait;
 
-%     rRemove('dXtext',indices);
+    %     rRemove('dXtext',indices);
     rSet('dXtext',indices,'visible',false);
     rGraphicsDraw;
     %     rClear;
@@ -97,7 +103,7 @@ try
 
     for i = 1:length(str)
         textwidth = fontsize*length(str{i})/ppd_;
-%         x_pos{i} = -textwidth/pi;
+    %         x_pos{i} = -textwidth/pi;
         x_pos{i} = -0.3*textwidth;
 
     end
@@ -112,7 +118,7 @@ try
         'color', [1 1 1]*255, ...
         'string', str );
 
-%     rGraphicsDraw(inf)
+    %     rGraphicsDraw(inf)
     spacekey = 44; % Only accept a space as the command to quit:
     [ keySecs, myKeyCode ] = rGraphicsDrawSelectiveBreakMulti(inf,[],spacekey);
     while KbCheckMulti
@@ -120,7 +126,7 @@ try
     end
     %     KbWait;
 
-%     rRemove('dXtext',indices);
+    %     rRemove('dXtext',indices);
     rSet('dXtext',indices,'visible',false);
     rGraphicsDraw;
     %     rClear;
@@ -136,7 +142,7 @@ try
 
     for i = 1:length(str)
         textwidth = fontsize*length(str{i})/ppd_;
-%         x_pos{i} = -textwidth/pi;
+    %         x_pos{i} = -textwidth/pi;
         x_pos{i} = -0.3*textwidth;
 
     end
@@ -151,7 +157,7 @@ try
         'color', [1 1 1]*255, ...
         'string', str );
 
-%     rGraphicsDraw(inf)
+    %     rGraphicsDraw(inf)
     spacekey = 44; % Only accept a space as the command to quit:
     [ keySecs, myKeyCode ] = rGraphicsDrawSelectiveBreakMulti(inf,[],spacekey);
     while KbCheckMulti
@@ -159,11 +165,11 @@ try
     end
     %     KbWait;
 
-%     rRemove('dXtext',indices);
+    %     rRemove('dXtext',indices);
     rSet('dXtext',indices,'visible',false);
     rGraphicsDraw;
     %     rClear;
-%     rGraphicsBlank;
+    %     rGraphicsBlank;
 
 catch
     e = lasterror

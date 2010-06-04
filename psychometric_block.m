@@ -48,9 +48,9 @@ score = 0;
 % isn't always toward the right:
 biasdir = rand(1);
 if biasdir < 0.5
-  PiDirbl = 'R';
+    PiDirbl = 'R';
 else
-  PiDirbl = 'L';
+    PiDirbl = 'L';
 end
 
 % keep the RSI constant for threshold estimation
@@ -67,27 +67,28 @@ RT = zeros(length(coherenceVec),1); ER = zeros(length(coherenceVec),1);
 ST_time = zeros(length(coherenceVec),1); RDir = zeros(length(coherenceVec),1);
 
 for n  = 1:length(coherenceVec)
-  if biasdir < 0.5
-    ST_bool = (rand(1) < PI);
-  else
-    ST_bool = (rand(1) > PI );
-  end  
-  
-  % set the coherence for this trial of dots
-  rSet('dXdots',dotsIdx,'coherence',coherenceVec(n));
-  if ST_bool
-    [RT(n), ER(n), RDir(n), score, premie_t{n}, ...
-     premie_d{n},ST_time(n)] = trial_fixedview (dotsIdx, targetIdx,blackTargetIdx,textIdx_Score, ppd_, 0, rkey, RSI_vector, shape,score, ntrial, money, salary,wdwPtr,1000,pahandle_correct, pahandle_antic, daq,lkey,rkey);
-    ST(n) = 'R';     
-    % Now store trial-by-trial scores:
-    SubScore(n) = score;
-  else
-    [RT(n), ER(n), RDir(n), score, premie_t{n}, ...
-     premie_d{n},ST_time(n)] = trial_fixedview (dotsIdx, targetIdx,blackTargetIdx,textIdx_Score, ppd_, 180, lkey, RSI_vector, shape,score, ntrial, money, salary, wdwPtr,1000,pahandle_correct, pahandle_antic, daq,lkey,rkey);
-    ST(n) = 'L';
-    % Now store trial-by-trial scores:
-    SubScore(n) = score;
-  end 
+    if biasdir < 0.5
+        ST_bool = (rand(1) < PI);
+    else
+        ST_bool = (rand(1) > PI );
+    end  
+
+    % set the coherence for this trial of dots
+    rSet('dXdots',dotsIdx,'coherence',coherenceVec(n));
+
+    if ST_bool
+        [RT(n), ER(n), RDir(n), score, premie_t{n}, ...
+        premie_d{n},ST_time(n)] = trial_fixedview (dotsIdx, targetIdx,blackTargetIdx,textIdx_Score, ppd_, 0, rkey, RSI_vector, shape,score, ntrial, money, salary,wdwPtr,1000,pahandle_correct, pahandle_antic, daq,lkey,rkey);
+        ST(n) = 'R';     
+        % Now store trial-by-trial scores:
+        SubScore(n) = score;
+    else
+        [RT(n), ER(n), RDir(n), score, premie_t{n}, ...
+        premie_d{n},ST_time(n)] = trial_fixedview (dotsIdx, targetIdx,blackTargetIdx,textIdx_Score, ppd_, 180, lkey, RSI_vector, shape,score, ntrial, money, salary, wdwPtr,1000,pahandle_correct, pahandle_antic, daq,lkey,rkey);
+        ST(n) = 'L';
+        % Now store trial-by-trial scores:
+        SubScore(n) = score;
+    end 
 end
 
 
@@ -97,40 +98,40 @@ meanRT = zeros(length(coher),1);
 accErr = zeros(length(coher),1);
 varRT = zeros(length(coher),1);
 for c = 1:length(coher)
-  thisCoherIndex = find(coherenceVec==coher(c));
-  acc(c) = 1-mean(ER(thisCoherIndex));
-  %accErr(c) = std(1-blockER(thisCoherIndex));
-  % binomial error
-  accErr(c) = sqrt(acc(c)*(1-acc(c)))/sqrt(length(thisCoherIndex));
-  meanRT(c) = mean(RT(thisCoherIndex));
-  varRT(c) = std(RT(thisCoherIndex));
+    thisCoherIndex = find(coherenceVec==coher(c));
+    acc(c) = 1-mean(ER(thisCoherIndex));
+    %accErr(c) = std(1-blockER(thisCoherIndex));
+    % binomial error
+    accErr(c) = sqrt(acc(c)*(1-acc(c)))/sqrt(length(thisCoherIndex));
+    meanRT(c) = mean(RT(thisCoherIndex));
+    varRT(c) = std(RT(thisCoherIndex));
 end
 cdf_type = 3; % fit with the gamma function
 % sometimes a fit to a psychometric function doesn't work, so we
 % embed it in a try-catch loop
 try
-  params = fminunc(@(x) psychometric_error_function(x,coher,acc',cdf_type),[1,1])
+    params = fminunc(@(x) psychometric_error_function(x,coher,acc',cdf_type),[1,1])
 catch
-  try 
-    cdf_type =1;
-    params = fminunc(@(x) psychometric_error_function(x,coher,acc',cdf_type),[1,1])
-  catch
-    % if it still doesn't work, try the last cdf_type
-    cdf_type = 2;
-    params = fminunc(@(x) psychometric_error_function(x,coher,acc',cdf_type),[1,1])
-  end
+    try 
+        cdf_type =1;
+        params = fminunc(@(x) psychometric_error_function(x,coher,acc',cdf_type),[1,1])
+    catch
+        % if it still doesn't work, try the last cdf_type
+        cdf_type = 2;
+        params = fminunc(@(x) psychometric_error_function(x,coher,acc',cdf_type),[1,1])
+    end
 end
 
 switch cdf_type
-   case 1
-    coh90perc = (norminv(0.9)-params(2))/params(1);
-    coh70perc = (norminv(0.7)-params(2))/params(1);
-   case 2
-    coh90perc = wblinv(0.9,params(1),params(2));
-    coh70perc = wblinv(0.7,params(1),params(2));
-   case 3
-    coh90perc = gaminv(0.9,params(1),params(2));
-    coh70perc = gaminv(0.7,params(1),params(2));
+    case 1
+        coh90perc = (norminv(0.9)-params(2))/params(1);
+        coh70perc = (norminv(0.7)-params(2))/params(1);
+    case 2
+        coh90perc = wblinv(0.9,params(1),params(2));
+        coh70perc = wblinv(0.7,params(1),params(2));
+    case 3
+        coh90perc = gaminv(0.9,params(1),params(2));
+        coh70perc = gaminv(0.7,params(1),params(2));
 end %switch
 
   
