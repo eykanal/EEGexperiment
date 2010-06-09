@@ -43,9 +43,17 @@ if local
         end
     end
     
-    % evaluate the function
-    result = code_cell{1}(code_cell{2:end});
-    disp(result);
+    % Evaluate the function, assigning the result to var_name. Code written
+    % this way to deal with functions that return more than one value.
+    nao = nargout(code_cell{1});
+    [result{1:nao}] = code_cell{1}(code_cell{2:end});
+
+    if ~isempty(var_name)
+        for n = 1:nao
+            assignin('caller', var_name(n), result{n});
+        end
+    end
+        
 else
     % format the argument list
     arg_list = '';
