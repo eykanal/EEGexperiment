@@ -33,16 +33,17 @@ function [ST, ST_time, RT, ER, RDir, PiDirbl, SubScore, score, premie_t, premie_
 %  premie_t
 %  premie_d
 
+% pull in vars from global space
+Behavioral  = evalin('caller','Behavioral');
+u           = evalin('caller','u');
+parport     = evalin('caller','parport');
+ppd_        = evalin('caller','ppd_');
 
-money = 0; 
-wartime = 5; %how long should be the warning before the trial
-% Get the pixels-per-degree for DotsX:
-ppd_ = rGet('dXscreen', 1, 'pixelsPerDegree');
-
-
-timeSt = GetSecs;
-ntrial = 0;
-score = 0;
+money   = 0; 
+wartime = 5; % how long should be the warning before the trial
+timeSt  = GetSecs;
+ntrial  = 0;
+score   = 0;
 
 % 2/19/04: Adding a randomization of the direction favored by bias, so that it 
 % isn't always toward the right:
@@ -74,17 +75,26 @@ for n  = 1:length(coherenceVec)
     end  
 
     % set the coherence for this trial of dots
-    rSet('dXdots',dotsIdx,'coherence',coherenceVec(n));
+    args = {@rSet,'dXdots',dotsIdx,'coherence',coherenceVec(n)};
+    execute_code(Behavioral,u,args);
 
     if ST_bool
-        [RT(n), ER(n), RDir(n), score, premie_t{n}, ...
-        premie_d{n},ST_time(n)] = trial_fixedview (dotsIdx, targetIdx,blackTargetIdx,textIdx_Score, ppd_, 0, rkey, RSI_vector, shape,score, ntrial, money, salary,wdwPtr,1000,pahandle_correct, pahandle_antic, daq,lkey,rkey);
+        [RT(n), ER(n), RDir(n), score, premie_t{n}, premie_d{n}, ...
+            ST_time(n)] = ...
+        trial_fixedview (dotsIdx, targetIdx, blackTargetIdx, ...
+            textIdx_Score, ppd_, 0, rkey, RSI_vector, shape, score, ...
+            ntrial, money, salary, wdwPtr, 1000, pahandle_correct, ...
+            pahandle_antic, daq, lkey, rkey);
         ST(n) = 'R';     
         % Now store trial-by-trial scores:
         SubScore(n) = score;
     else
-        [RT(n), ER(n), RDir(n), score, premie_t{n}, ...
-        premie_d{n},ST_time(n)] = trial_fixedview (dotsIdx, targetIdx,blackTargetIdx,textIdx_Score, ppd_, 180, lkey, RSI_vector, shape,score, ntrial, money, salary, wdwPtr,1000,pahandle_correct, pahandle_antic, daq,lkey,rkey);
+        [RT(n), ER(n), RDir(n), score, premie_t{n}, premie_d{n}, ...
+            ST_time(n)] = ...
+        trial_fixedview (dotsIdx, targetIdx, blackTargetIdx, ...
+            textIdx_Score, ppd_, 180, lkey, RSI_vector, shape, score, ...
+            ntrial, money, salary, wdwPtr, 1000, pahandle_correct, ...
+            pahandle_antic, daq, lkey, rkey);
         ST(n) = 'L';
         % Now store trial-by-trial scores:
         SubScore(n) = score;
@@ -93,18 +103,17 @@ end
 
 
 % now come up with a coherence for this participant
-acc = zeros(length(coher),1);
-meanRT = zeros(length(coher),1);
-accErr = zeros(length(coher),1);
-varRT = zeros(length(coher),1);
+acc     = zeros(length(coher),1);
+meanRT  = zeros(length(coher),1);
+accErr  = zeros(length(coher),1);
+varRT   = zeros(length(coher),1);
 for c = 1:length(coher)
     thisCoherIndex = find(coherenceVec==coher(c));
-    acc(c) = 1-mean(ER(thisCoherIndex));
-    %accErr(c) = std(1-blockER(thisCoherIndex));
+    acc(c)    = 1-mean(ER(thisCoherIndex));
     % binomial error
     accErr(c) = sqrt(acc(c)*(1-acc(c)))/sqrt(length(thisCoherIndex));
     meanRT(c) = mean(RT(thisCoherIndex));
-    varRT(c) = std(RT(thisCoherIndex));
+    varRT(c)  = std(RT(thisCoherIndex));
 end
 cdf_type = 3; % fit with the gamma function
 % sometimes a fit to a psychometric function doesn't work, so we
