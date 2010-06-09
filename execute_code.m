@@ -2,13 +2,15 @@ function result = execute_code( local, varargin )
 
 % function execute_code( local, code_cell [, u [, var_name ] ] )
 %
-%   local       = true if should be executed locally, false otherwise
+%   local       = boolean - true if should be executed locally, false otherwise
 %   code_cell   = cell containing:
 %                   (1) function handle
 %                   (2,:) arguments (strings)
 %   u           = udp object - optional, required for UDP transmission
-%   var_name    = variable name for function output - optional
-%                   - only applicable when used for remote execution!
+%   var_name (optional)	= Variable name for function output. For functions
+%						  returning a single value, should be string. If
+%						  multiple values returned, should be cell array of
+%						  strings.
 %
 % This function will either send code to be executed remotely over UDP or 
 % execute it locally, depending on the value of 'local'. If an argument in
@@ -30,7 +32,10 @@ end
 
 % set variable name to receive function output
 if nargin >= 4
-    var_name = strcat(varargin{3},'=');
+    var_name = varargin{3};
+	if ~iscell(var_name)
+		var_name = {var_name};
+	end
 end
 
 if local
@@ -50,7 +55,7 @@ if local
 
     if ~isempty(var_name)
         for n = 1:nao
-            assignin('caller', var_name(n), result{n});
+            assignin('caller', var_name{n}, result{n});
         end
     end
         
@@ -79,7 +84,13 @@ else
     
     % trim trailing comma off end of list
     arg_list = arg_list(1:length(arg_list)-1);
+	
+	equals = '';
+	% add "=" if var_name is present
+	if ~isempty(var_name)
+		equals = '=';
+	end
     
-    str = strcat('func=',func2str(code_cell{1}),';',var_name,'func(',arg_list,');');
+    str = strcat('func=',func2str(code_cell{1}),';',var_name,equals,'func(',arg_list,');');
     fprintf(u,str);
 end
