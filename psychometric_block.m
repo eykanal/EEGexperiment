@@ -76,7 +76,7 @@ for n  = 1:length(coherenceVec)
 
     % set the coherence for this trial of dots
     args = {@rSet,'dXdots',dotsIdx,'coherence',coherenceVec(n)};
-    execute_code(Behavioral,u,args);
+    execute_code(Behavioral,args,u);
 
     if ST_bool
         [RT(n), ER(n), RDir(n), score, premie_t{n}, premie_d{n}, ...
