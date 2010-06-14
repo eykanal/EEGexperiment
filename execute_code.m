@@ -8,19 +8,24 @@ function result = execute_code( local, varargin )
 %                   (2,:) arguments (strings)
 %   u           = udp object - optional, required for UDP transmission
 %   var_name (optional)	= Variable name for function output. For functions
-%						  returning a single value, should be string. If
-%						  multiple values returned, should be cell array of
-%						  strings.
+%                 returning a single value, should be string. If
+%                 multiple values returned, should be cell array of
+%                 strings.
 %
 % This function will either send code to be executed remotely over UDP or 
 % execute it locally, depending on the value of 'local'. If an argument in
-% cell_code should be interpreted as a variable, it should be prefixed by a
-% '*' symbol, as follows:
+% cell_code should be interpreted as a variable, it should be written as a
+% string prefixed by the '*' symbol, as follows:
 %
 %   var = 8;
-%   execute_code( local, u, { @max, '*var',7 } )
-
-% EK, 6/3/2010
+%   execute_code( local, u, { @max, '*var',7 } );
+%
+% This would result in the following function being executed:
+% 
+%    max(var,7);
+%
+% 
+% Eliezer Kanal, 6/3/2010
 
 code_cell = varargin{1};
 
@@ -93,4 +98,5 @@ else
     
     str = strcat('func=',func2str(code_cell{1}),';',var_name,equals,'func(',arg_list,');');
     fprintf(u,str);
+    disp(str);
 end
