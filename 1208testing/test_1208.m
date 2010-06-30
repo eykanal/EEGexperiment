@@ -11,7 +11,7 @@ function test_1208()
 %
 
 % 1) locate the device
-disp('\n1) Locate device');
+disp('1) Locate device');
 devices = PsychHID('Devices');
 daq = DaqDeviceIndex;
 if ~isempty(daq)
@@ -23,7 +23,7 @@ else
 end
 
 % 2) blinking device LED
-disp('\n2) Blink LED');
+disp('2) Blink LED');
 err = DaqBlinkLED(daq);
 if ~err
     disp('Error!');
@@ -40,7 +40,7 @@ else
 end
 
 % 3) receive data
-disp('\n3) Receive data');
+disp('3) Receive data');
 errA = DaqDConfigPort(daq, 0, 0);   % Port A will send data out
 errB = DaqDConfigPort(daq, 1, 1);   % Port B will receive data
 
@@ -59,10 +59,10 @@ disp('Received data!');
 disp(resp);
 
 % 4) send data out
-disp('\n4)  Send data');
+disp('4)  Send data');
 err1 = DaqDOut(daq, 0, 10);
 WaitSecs(0.5);
 err2 = DaqDIn(daq, 0, 5);
 disp('Data sent!');
-
-disp('\n\nFinished! You may want to also run DaqTest also to verify that everything is working correctly.');
+disp('');
+disp('Finished! You may want to also run DaqTest also to verify that everything is working correctly.');
