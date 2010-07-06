@@ -1,5 +1,5 @@
 
-function welcome_main();
+function welcome_main()
 
 
 % show some text with the dXtext class
