@@ -1,78 +1,104 @@
-function [keyIsDown,secs, keyCode] = KbCheck(deviceNumber)
-% [keyIsDown,secs,keyCode] = KbCheck([deviceNumber])
-%
+function [keyIsDown,secs, keyCode, deltaSecs] = KbCheck(deviceNumber)
+% [keyIsDown, secs, keyCode, deltaSecs] = KbCheck([deviceNumber])
+% 
 % Return keyboard status (keyIsDown), time (secs) of the status check, and
 % keyboard scan code (keyCode).
-%
+% 
 %    keyIsDown      1 if any key, including modifiers such as <shift>,
 %                   <control> or <caps lock> is down. 0 otherwise.
-%
-%    secs           time of keypress as returned by GetSecs.
-%
-%    keyCode        Mac: a 128-element logical array.  Each bit within the
-%                   logical array represents one keyboard key. If a key is
-%                   pressed, its bit is set, othewise the bit is clear. To
-%                   convert a keyCode to a vector of key numbers use
-%                   FIND(keyCode). To find a key's keyNumber use KbName
-%                   or KbDemo.
-%
-%                   Win: a 256-element array. It seems that the first
-%                   128 elements correspond to the
-%                   ascii sequence of the characters, and may be consistent
-%                   with the Mac key codes.
+% 
+%    secs           Time of keypress as returned by GetSecs.
+% 
+%    keyCode        A 256-element logical array.  Each bit
+%                   within the logical array represents one keyboard key. 
+%                   If a key is pressed, its bit is set, othewise the bit 
+%                   is clear. To convert a keyCode to a vector of key  
+%                   numbers use FIND(keyCode). To find a key's keyNumber 
+%                   use KbName or KbDemo.
+% 
+%    deltaSecs      Time in seconds since this KbCheck query and the most
+%                   recent previous query (if any). This value is in some
+%                   sense a confidence interval, e.g., for reaction time
+%                   measurements. If KbCheck returns the information that a
+%                   key is pressed by the subject, then the subject could
+%                   have pressed the key down anytime between this
+%                   invocation of KbCheck at time 'secs' and the most
+%                   recent previous invocation. Therefore, 'deltaSecs'
+%                   tells you about the interval in which depression of the
+%                   key(s) might have happened: [secs - deltaSecs; secs].
+%                   for practical purpose this means that "measured" RT's
+%                   can't be more accurate than 'deltaSecs' seconds - the
+%                   interval between the two most recent keyboard checks.
+%                   Please note however, that standard computer keyboards
+%                   can incur additional delays and timing uncertainty of
+%                   up to 50 msecs, so the real uncertainty can be higher
+%                   than 'deltaSecs' -- 'deltaSecs' is just a lower bound!
 %
 % KbCheck and KbWait determine whether any key is down now, including the
 % meta keys: <caps lock>, <shift>, <command>, <control>, and <option>. The
 % only key not reported is the start key (triangle) used to power on your
 % computer.
+% 
+% Some users of Laptops experienced the problem of "stuck keys": Some keys
+% are always reported as "down", so KbWait returns immediately and KbCheck
+% always reports keyIsDown == 1. This is often due to special function keys.
+% These keys or system functionality are assigned vendor specific
+% key codes, e.g., the status of the Laptop lid (opened/closed) could be
+% reported by some special keycode. Whenever the Laptop lid is open, this key
+% will be reported as pressed. You can work around this problem by passing
+% a list of keycodes to be ignored by KbCheck and KbWait. See
+% "help DisableKeysForKbCheck" on how to do this.
+%
+% Keys pressed by the subject often show up in the Matlab command window as
+% well, cluttering that window with useless character junk. You can prevent
+% this from happening by disabling keyboard input to Matlab: Add a
+% ListenChar(2); command at the beginning of your script and a
+% ListenChar(0); to the end of your script to enable/disable transmission of
+% keypresses to Matlab. If your script should abort and your keyboard is
+% dead, press CTRL+C to reenable keyboard input -- It is the same as
+% ListenChar(0). See 'help ListenChar' for more info.
 %
 % GetChar and CharAvail are character-oriented (and slow), whereas KbCheck
 % and KbWait are keypress-oriented (and fast). If only a meta key was hit,
 % KbCheck will return true, because a key was pressed, but CharAvail will
 % return false, because no character was generated. See GetChar.
-%
+% 
 % KbCheck and KbWait are MEX files, which take time to load when they're
 % first called. They'll then stay loaded until you flush them (e.g. by
 % changing directory or calling CLEAR MEX).
 %
-% OS X: ___________________________________________________________________
+% OSX: ___________________________________________________________________
 %
 % KbCheck uses the PsychHID function, a general purpose function for
 % reading from the Human Interface Device (HID) class of USB devices.
 %
-% OS 9: ___________________________________________________________________
+% KbCheck queries the first USB-HID keyboard device by default. Optionally,
+% when multiple keyboards are attached to your machine, you can pass in a
+% 'deviceNumber':  When 'deviceNumber' is -1, KbCheck will query all
+% keyboard devices and return their "merged state" - The 'keyCode' vector
+% will represent the state of all keys of all keyboards, and the
+% 'keyIsDown' flag will be equal to one if at least one key on any of the
+% keyboards is pressed. When 'deviceNumber' is -2, KbCheck will query all
+% keypad devices (if any) and return their "merged state", and when
+% 'deviceNumber' is -3, KbCheck will query all keyboard and keypad devices
+% and return their "merged state". When 'deviceNumber' is greater than 0, it
+% will query only the specified HID keyboard device corresponding to that
+% 'deviceNumber'. The function GetKeyboardIndices() allows to query the
+% device numbers of all attached keyboards, or keyboards matching specific
+% criteria, and the function GetKeypadIndices() allows the same for keypads.
+% 
+% Windows/Linux: __________________________________________________________
 %
-% Command-Period causes an immediate exit.
-%
-% The Mac OS Event Manager detects and queues typed characters in the
-% background. GetChar will return any characters typed before the  call to
-% GetChar. FlushEvents can be used to clear the character event  buffer
-% read by GetChar. Unlike GetChar, KbCheck only reports keys  depressed at
-% the moment KbCheck is called.  FlushEvents has no effect  on KbCheck.
-%
-% Hitting CapsLock makes KbCheck and KbWait think that you're holding the
-% shift key down. They will continue to think so (returning 1) until you
-% release the shift by hitting CapsLock again.
-%
-% KbCheck and KbWait detect that a key is down by using the low-level Mac
-% OS call GetKeys. It's not clear what temporal accuracy this provides, but
-% it's much better than going through the higher-level Event Manager. Our
-% impression from reading the documentation in Dan Costin's KeMo package
-% web http://psychtoolbox.org/kemo.html
-% <ftp://ftp.stolaf.edu/pub/macpsych/KemMo_1.5.sit.hqx> is that this
-% low-level call still has uncertainty on the order of 11 ms because of the
-% way the Mac OS polls ADB devices. Someone clever could probably use his
-% advice to develop MEX files that timed keypresses more  accurately than
-% KbCheck does.
-%
+% KbCheck uses built-in helper functions of the Screen() mex file to query
+% keyboard state.
 % _________________________________________________________________________
-%
-% See also: FlushEvents, KbName, KbDemo, KbWait, GetChar, CharAvail, KbDemo.
+% 
+% See also: FlushEvents, KbName, KbDemo, KbWait, GetChar, CharAvail.
 
 % TO DO:
 %
-%  - Mention that on USB systems there the USB bus is sampled at 100hz
-%  - We could augment this to to accept an optional keyboard device number.
+%  - Mention that on USB systems there the USB bus is sampled at 100 Hz.
+%  - We could augment this to to accept an optional keyboard device number. 
 
 % 3/6/97  dhb  Wrote it.
 % 8/2/97  dgp  Explain difference between key and character.
@@ -85,30 +111,152 @@ function [keyIsDown,secs, keyCode] = KbCheck(deviceNumber)
 % 7/7/00  dgp  Cosmetic.
 % 6/17/02 awi  ****** OS X-specific fork from the OS 9 version *******
 %                Added conditional invocation of PsychHID on OSX
-% 7/12/04 awi  Cosmetic.  Separted platform-specific help. Use IsOSX now.
-% 7/13/05 rpk  Added ability to sort out invalidProducts that were
-%                   considered keyboards. Also, will now check all
-%                   valid keyboards insted of just the first one. 
-keyIsDown = 0;
-if IsOSX
-    if nargin==1
-        [keyIsDown,secs, keyCode]= PsychHID('KbCheck', deviceNumber);
-    elseif nargin == 0
-        invalidProducts = {'USB Trackball'};
-        devices = PsychHID('devices');
-        for i = 1:length(devices)
-            if(strcmp(devices(i).usageName, 'Keyboard') )
-                for j = 1:length(invalidProducts)
-                    if(~(strcmp(invalidProducts{j}, devices(i).product)))
-                        if(~keyIsDown)
-                            [keyIsDown,secs, keyCode]= PsychHID('KbCheck', i);
-                        end
-                    end
-                end
+% 7/12/04 awi  Cosmetic.  Separted platform-specific help. Use IsOSX now. 
+% 10/4/05 awi  Note here cosmetic changes by dbp on unknown date between 7/12/04 and 10/4/05.  
+% 10/24/06 mk  Windows and Linux implementation: Use built-in helper code in Screen.
+% 10/24/06 mk  Add code for disabling "stuck keys".
+% 6/13/08 abl  Option for OS X to poll all keyboard devices by passing deviceNumber == -1, \
+%              based on kas's modification of KbWait.
+% 11/16/8  mk  Allow to use "white-list" of enabled keys in
+%              ptb_kbcheck_enabledKeys. This is set via
+%              RestrictKeysForKbCheck, and passed to PsychHID in order to
+%              restrict keyboard scans to a subset of enabled keys. This
+%              provides a significant speedup for KbChecks if used properly.
+%              On non-OS/X, this is emulated in software and does not
+%              provide any speedup.
+% 03/03/9  mk  Bugfix for "white-list" code on old Matlab releases. Need to
+%              cast to double and back to uint8, as old Matlabs don't
+%              support .* operation on uint8 class arrays.
+% 12/18/09 rpw Added support for polling keypads on OSX via deviceNumber of -2 or -3
+% 01/07/10 mk  Code refactoring: Unified check-code for all deviceIndex
+%              values.
+% 07/06/10 ek  Enable compatibility with daq device.
 
+% ptb_kbcheck_disabledKeys is a vector of keyboard scancodes. It allows
+% to define keys which should never be reported as 'down', i.e. disabled
+% keys. The vector is empty by default. If you have special quirky hardware,
+% e.g., some Laptop keyboards, that reports some keys as 'always down', you
+% can work around this 'stuck keys' by defining them in the ptb_kbcheck_disabledKeys
+% vector.
+global ptb_kbcheck_disabledKeys;
+
+% ptb_kbcheck_enabledKeys is a white-list of keys to query. If set to
+% non-empty 
+global ptb_kbcheck_enabledKeys;
+
+% EK - check whether daq is being used
+global daq;
+
+% Store timestamp of previous KbCheck:
+persistent oldSecs;
+
+% Cache operating system type to speed up the code below:
+persistent macosx;
+% ...and all keyboard indices as well:
+persistent kbs kps;
+
+if isempty(macosx)
+    % First time invocation: Query and cache type of OS:
+    macosx = IsOSX;
+    
+    % Set initial oldSecs to minus infinity: No such query before...
+    oldSecs = -inf;
+    
+    % Query indices of all attached keyboards, in case we need'em:
+    if macosx
+        kbs=GetKeyboardIndices;
+        kps=GetKeypadIndices;
+        
+        % Init ptb_kbcheck_enabledKeys to empty, if it hasn't been set
+        % externally already:
+        if ~exist('ptb_kbcheck_enabledKeys', 'var')
+            ptb_kbcheck_enabledKeys = [];
+        end
+    end
+end
+
+if macosx
+    if nargin==1
+        if deviceNumber==-1
+            % Query all attached keyboards:
+            keyt = kbs;
+        elseif deviceNumber==-2
+            % Query all attached keypads:
+            keyt = kps; 
+        elseif deviceNumber==-3
+            % Query all attached keyboards and keypads:
+            keyt = [kbs kps]; 
+        else
+            % Query a specific keyboard device number:
+            keyt = deviceNumber;
+        end
+
+        if ~isempty(keyt)
+            % Check all devices in vector keyt and merge their state:
+            keyIsDown=0; keyCode=zeros(1,256);  % preallocate these variables
+            for i=keyt
+                [DeviceKeyIsDown, secs, DeviceKeyCode]= PsychHID('KbCheck', i, ptb_kbcheck_enabledKeys);
+                keyIsDown = keyIsDown | DeviceKeyIsDown;
+                keyCode = keyCode | DeviceKeyCode;
+            end
+        else
+            [keyIsDown, secs, keyCode]= PsychHID('KbCheck', [], ptb_kbcheck_enabledKeys);
+        end
+        
+    elseif nargin == 0
+        % Query primary keyboard:
+        [keyIsDown, secs, keyCode]= PsychHID('KbCheck', [], ptb_kbcheck_enabledKeys);
+        
+        % EK - allow daq responses
+        if ~isempty(daq) && daq ~= -1  % don't check if behavioral
+            resp = DaqDIn(daq);
+            if resp ~= 224  % 224 = nothing pressed
+                            % 232 = left
+                            % 240 = right
+                            % 248 = both
+                keyIsDown = 1;
+                secs = GetSecs;
+
+                keyCode = double(zeros(1,256));
+                if resp == 232
+                    keyCode(KbName('Z')) = 1;
+                elseif resp == 240
+                    keyCode(KbName('M')) = 1;
+                elseif resp == 248
+                    keyCode(44) = 1;  % space key
+                end
             end
         end
     elseif nargin > 1
-        error('Too many arguments supplied to KbCheck');
+        error('Too many arguments supplied to KbCheck'); 
     end
+else
+   % We use the built-in KbCheck facility of Screen on GNU/Linux and MS-Windows
+   % for KbChecks until a PsychHID implementation is ready.
+    [keyIsDown,secs, keyCode]= Screen('GetMouseHelper', -1);
 end
+
+% Compute time delta since previous keyboard query, and update internal
+% cached value:
+deltaSecs = secs - oldSecs;
+oldSecs = secs;
+
+% Only need to apply ptb_kbcheck_enabledKeys manually on non-OS/X systems,
+% as this is done internally in PsychHID('KbCheck') on OS/X:
+if ~macosx & ~isempty(ptb_kbcheck_enabledKeys) %#ok<AND2>
+    % Mask all keys with the enabled keys:
+    keyCode = uint8(double(keyCode) .* ptb_kbcheck_enabledKeys);
+
+    % Reevaluate global key down state:
+    keyIsDown = any(keyCode);
+end
+
+% Any dead keys defined?
+if ~isempty(ptb_kbcheck_disabledKeys)
+   % Yes. Disable all dead keys - force them to 'not pressed':
+   keyCode(ptb_kbcheck_disabledKeys)=0;
+   % Reevaluate global key down state:
+   keyIsDown = any(keyCode);
+end
+
+return;
