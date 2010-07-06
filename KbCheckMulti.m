@@ -1,4 +1,4 @@
-function [keyIsDown,secs, keyCode, deltaSecs] = KbCheck(deviceNumber)
+function [keyIsDown,secs, keyCode, deltaSecs] = KbCheckMulti(deviceNumber)
 % [keyIsDown, secs, keyCode, deltaSecs] = KbCheck([deviceNumber])
 % 
 % Return keyboard status (keyIsDown), time (secs) of the status check, and
