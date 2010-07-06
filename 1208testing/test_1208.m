@@ -14,6 +14,7 @@ function test_1208()
 disp('1) Locate device');
 devices = PsychHID('Devices');
 daq = DaqDeviceIndex;
+daq = daq(2);
 if ~isempty(daq)
     disp('Found device!');
 else
@@ -46,23 +47,72 @@ errB = DaqDConfigPort(daq, 1, 1);   % Port B will receive data
 
 begTime = GetSecs;
 data = DaqDIn(daq);
-disp('Please press a pad button...');
-resp = data;
-while resp == data;
+
+fprintf('\nFor the next few seconds, press the right pad buttons...');
+right = zeros(1000,1);
+for n = 1:1000
     resp = DaqDIn(daq);
-    if (GetSecs - begTime) > 30
-        disp('Not receiving data! Bummer!');
-        return
+    right(n) = resp(2);
+
+    % use escape to get out of this
+    [ keyIsDown, seconds, keyCode ] = KbCheck;
+    if keyIsDown && keyCode(KbName('ESCAPE'))
+        while KbCheck; end
+        break;
     end
 end
-disp('Received data!');
-disp(resp);
+
+fprintf('\nFor the next few seconds, press the left pad buttons...');
+left = zeros(1000,1);
+for n = 1:1000
+    resp = DaqDIn(daq);
+    left(n) = resp(2);
+
+    % use escape to get out of this
+    [ keyIsDown, seconds, keyCode ] = KbCheck;
+    if keyIsDown && keyCode(KbName('ESCAPE'))
+        while KbCheck; end
+        break;
+    end
+end
+
+fprintf('\nFor the next few seconds, press both the pad buttons...');
+both = zeros(1000,1);
+for n = 1:1000
+    resp = DaqDIn(daq);
+    both(n) = resp(2);
+
+    % use escape to get out of this
+    [ keyIsDown, seconds, keyCode ] = KbCheck;
+    if keyIsDown && keyCode(KbName('ESCAPE'))
+        while KbCheck; end
+        break;
+    end
+end
+
+fprintf('\nFor the next few seconds, go nuts on the pad buttons...');
+gonuts = zeros(1000,1);
+for n = 1:1000
+    resp = DaqDIn(daq);
+    gonuts(n) = resp(2);
+
+    % use escape to get out of this
+    [ keyIsDown, seconds, keyCode ] = KbCheck;
+    if keyIsDown && keyCode(KbName('ESCAPE'))
+        while KbCheck; end
+        break;
+    end
+end
+
+disp('Collected!');
 
 % 4) send data out
 disp('4)  Send data');
 err1 = DaqDOut(daq, 0, 10);
 WaitSecs(0.5);
-err2 = DaqDIn(daq, 0, 5);
+err2 = DaqDOut(daq, 0, 5);
 disp('Data sent!');
 disp('');
+plot(x);
+save('buttonPressing.mat','left','right','both','gonuts');
 disp('Finished! You may want to also run DaqTest also to verify that everything is working correctly.');
