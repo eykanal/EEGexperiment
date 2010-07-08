@@ -26,13 +26,13 @@ end
 % 2) blinking device LED
 disp('2) Blink LED');
 err = DaqBlinkLED(daq);
-if ~err
+if isempty(err)
     disp('Error!');
     disp(err);
     return;
 end
 
-resp = input('Did it blink? (y/n)');
+resp = input('Did it blink? (y/n) ','s');
 if resp ~= 'y'
     disp('I thought it did! Problem!');
     return;
@@ -48,11 +48,13 @@ errB = DaqDConfigPort(daq, 1, 1);   % Port B will receive data
 begTime = GetSecs;
 data = DaqDIn(daq);
 
-fprintf('\nFor the next few seconds, press the right pad buttons...');
-right = zeros(1000,1);
+fprintf('\nPress the right pad button... ');
 for n = 1:1000
     resp = DaqDIn(daq);
-    right(n) = resp(2);
+    if resp(2) == 240
+        fprintf('pressed!');
+        break;
+    end
 
     % use escape to get out of this
     [ keyIsDown, seconds, keyCode ] = KbCheck;
@@ -62,11 +64,13 @@ for n = 1:1000
     end
 end
 
-fprintf('\nFor the next few seconds, press the left pad buttons...');
-left = zeros(1000,1);
-for n = 1:1000
+fprintf('\nPress the left pad button... ');
+while 1
     resp = DaqDIn(daq);
-    left(n) = resp(2);
+    if resp(2) == 232
+        fprintf('pressed!');
+        break;
+    end
 
     % use escape to get out of this
     [ keyIsDown, seconds, keyCode ] = KbCheck;
@@ -76,11 +80,13 @@ for n = 1:1000
     end
 end
 
-fprintf('\nFor the next few seconds, press both the pad buttons...');
-both = zeros(1000,1);
+fprintf('\nPress both pad buttons... ');
 for n = 1:1000
     resp = DaqDIn(daq);
-    both(n) = resp(2);
+    if resp(2) == 248
+        fprintf('pressed!\n');
+        break;
+    end
 
     % use escape to get out of this
     [ keyIsDown, seconds, keyCode ] = KbCheck;
@@ -89,22 +95,6 @@ for n = 1:1000
         break;
     end
 end
-
-fprintf('\nFor the next few seconds, go nuts on the pad buttons...');
-gonuts = zeros(1000,1);
-for n = 1:1000
-    resp = DaqDIn(daq);
-    gonuts(n) = resp(2);
-
-    % use escape to get out of this
-    [ keyIsDown, seconds, keyCode ] = KbCheck;
-    if keyIsDown && keyCode(KbName('ESCAPE'))
-        while KbCheck; end
-        break;
-    end
-end
-
-disp('Collected!');
 
 % 4) send data out
 disp('4)  Send data');
@@ -113,6 +103,5 @@ WaitSecs(0.5);
 err2 = DaqDOut(daq, 0, 5);
 disp('Data sent!');
 disp('');
-plot(x);
-save('buttonPressing.mat','left','right','both','gonuts');
+%save('buttonPressing.mat','left','right','both','gonuts');
 disp('Finished! You may want to also run DaqTest also to verify that everything is working correctly.');
