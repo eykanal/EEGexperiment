@@ -144,8 +144,9 @@ global ptb_kbcheck_disabledKeys;
 % non-empty 
 global ptb_kbcheck_enabledKeys;
 
-% EK - check whether daq is being used
-global daq;
+% EK - check whether daq is being used. Rather use this than make daq
+% global.
+daq = evalin('base','daq');
 
 % Store timestamp of previous KbCheck:
 persistent oldSecs;
@@ -210,6 +211,7 @@ if macosx
         % EK - allow daq responses
         if ~isempty(daq) && daq ~= -1  % don't check if behavioral
             resp = DaqDIn(daq);
+            resp = resp(2);
             if resp ~= 224  % 224 = nothing pressed
                             % 232 = left
                             % 240 = right
