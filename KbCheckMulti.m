@@ -144,9 +144,8 @@ global ptb_kbcheck_disabledKeys;
 % non-empty 
 global ptb_kbcheck_enabledKeys;
 
-% EK - check whether daq is being used. Rather use this than make daq
-% global.
-daq = evalin('base','daq');
+% EK - check whether daq is being used.
+global daq;
 
 % Store timestamp of previous KbCheck:
 persistent oldSecs;
