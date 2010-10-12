@@ -97,7 +97,7 @@ try
 
     % show a normal text, and
     %   try to make another that looks good on mono++
-    indices = rAdd('dXtext', 6, 'visible', true, ...
+    indices = rAdd('dXtext', 5, 'visible', true, ...
         'x', x_pos, 'y', { -1*lnsp 0*lnsp 1*lnsp 2*lnsp 5*lnsp }, ...
         'size', fontsize, ...
         'font', 'Courier',  ...
@@ -150,11 +150,8 @@ try
     end
     rSet('dXtext',indices,'visible',false);
     rGraphicsDraw;
-
-
-  
 catch
-    e = lasterror
+    e = lasterror 
 end
 
 
