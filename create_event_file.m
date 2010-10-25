@@ -4,13 +4,14 @@ function create_event_file( fiff, subj_data, path )
 %
 %   fiff      = MEG data file name (including path) 
 %   subj_data = data file containing run data (subject#_ses#.mat)
-%   filename  = root filename for output file WITHOUT .fif extension
-%   directory = directory to save output files
+%   path      = path where files should be saved
 %
 % Write an event file for coherence-based analysis. Exclude all incorrect
 % responses. Place four triggers - (1) low coherence trial onset, (2) high
 % coherence trial onset, (3) low coherence response time, (4) high 
 % coherence response time.
+%
+% Eliezer Kanal - 10/26/10
 
 if nargin == 2
     path = pwd;
@@ -64,11 +65,30 @@ end
 % the number of trials (as measured by the coherence vector).
 if length([cohVec Right_RT Left_RT]) ~= length(data.times.onset)
     
+    % Find the Infs in the RT file, remove from the appropriate vars
+    infs = find(isinf(RT));
+    
+    for n = 1:length(infs)
+        bad_entry = infs(n);
+        
+        cohVec = [cohVec(1:bad_entry-1) cohVec(bad_entry+1:length(cohVec))];
+        cueVec = [cueVec(1:bad_entry-1) cueVec(bad_entry+1:length(cueVec))];
+        ST     = [ST(1:bad_entry-1) ST(bad_entry+1:length(ST))];
+        ER     = [ER(1:bad_entry-1) ER(bad_entry+1:length(ER))];
+        RT     = [RT(1:bad_entry-1) RT(bad_entry+1:length(RT))];
+        RDir   = [RDir(1:bad_entry-1) RDir(bad_entry+1:length(RDir))];  
+    end
+    
+    % Re-check to see if it still doesn't match
+    if length([cohVec Right_RT Left_RT]) ~= length(data.times.onset)
+        manual_break = true;
+    end
+
     % This is the basic troubleshooting routine to determine where the
     % problem is (whether the PTB file or MEG file is shorter, and which
     % entry is the missing one)
     PTB_RT = RT';
-    MEG_RT = [data.times.offset' - data.times.onset'] / 1000;
+    MEG_RT = (data.times.offset' - data.times.onset') / 1000;
     
     PTB_len = length(PTB_RT);
     MEG_len = length(MEG_RT);
@@ -96,8 +116,8 @@ end
 
 % Average based on coherence. Only include (1) correct, (2) non-arrow
 % trials.
-coherence_entries.times.onset  = data.times.onset (cueVec == 'd' & ER == 0);
-coherence_entries.times.offset = data.times.offset(cueVec == 'd' & ER == 0);
+coherence_entries.times.onset  = data.times.onset (cueVec == 'd' & ER == 0 & ~isinf(RT));
+coherence_entries.times.offset = data.times.offset(cueVec == 'd' & ER == 0 & ~isinf(RT));
 
 coherence_entries.coherence = ones(size(coherence_entries.times.onset));  % set all coherence entries to "high"... gotta start somewhere!
 coherence_entries.coherence(cohVec(cueVec == 'd' & ER == 0) == min(coherence_array)) = 2;  % change the low ones to "low"
@@ -106,8 +126,8 @@ coherence_entries.labels = repmat({'high coherence'}, size(coherence_entries.coh
 coherence_entries.labels(coherence_entries.coherence == 2) = {'low coherence'};
 
 % Average based on response direction
-respdir_entries.times.onset  = data.times.onset (cueVec == 'd');
-respdir_entries.times.offset = data.times.offset(cueVec == 'd');
+respdir_entries.times.onset  = data.times.onset (cueVec == 'd' & ~isinf(RT));
+respdir_entries.times.offset = data.times.offset(cueVec == 'd' & ~isinf(RT));
 
 respdir_entries.direction = ones(size(respdir_entries.times.onset));
 respdir_entries.direction(RDir == 'R') = 2;
@@ -116,8 +136,8 @@ respdir_entries.labels = repmat({'left'}, size(respdir_entries.direction));
 respdir_entries.labels(respdir_entries.direction == 2) = {'right'};
 
 % Average based on arrows. Only include (1) correct, (2) arrow trials.
-arrows_entries.times.onset  = data.times.onset (cueVec == 'a' & ER == 0);
-arrows_entries.times.offset = data.times.offset(cueVec == 'a' & ER == 0);
+arrows_entries.times.onset  = data.times.onset (cueVec == 'a' & ER == 0 & ~isinf(RT));
+arrows_entries.times.offset = data.times.offset(cueVec == 'a' & ER == 0 & ~isinf(RT));
 
 arrows_entries.direction = ones(size(arrows_entries.times.onset));
 arrows_entries.direction(ST == 'R') = 2;
@@ -143,22 +163,22 @@ end
 %
 
 % open/create coherence event file for writing
-fid_coh_stim    = fopen(fullfile(path, sprintf('%s_coh_stim.eve',filename)),'w+');
-fid_coh_resp    = fopen(fullfile(path, sprintf('%s_coh_resp.eve',filename)),'w+');
-fid_respdir_stim   = fopen(fullfile(path, sprintf('%s_respdir_stim.eve',filename)),'w+');
-fid_respdir_resp   = fopen(fullfile(path, sprintf('%s_respdir_resp.eve',filename)),'w+');
-fid_arrows_stim = fopen(fullfile(path, sprintf('%s_arrows_stim.eve',filename)),'w+');
-fid_arrows_resp = fopen(fullfile(path, sprintf('%s_arrows_resp.eve',filename)),'w+');
+fid_coh_stim     = fopen(fullfile(path, sprintf('%s_coh_stim.eve',filename)),'w+');
+fid_coh_resp     = fopen(fullfile(path, sprintf('%s_coh_resp.eve',filename)),'w+');
+fid_respdir_stim = fopen(fullfile(path, sprintf('%s_respdir_stim.eve',filename)),'w+');
+fid_respdir_resp = fopen(fullfile(path, sprintf('%s_respdir_resp.eve',filename)),'w+');
+fid_arrows_stim  = fopen(fullfile(path, sprintf('%s_arrows_stim.eve',filename)),'w+');
+fid_arrows_resp  = fopen(fullfile(path, sprintf('%s_arrows_resp.eve',filename)),'w+');
 if( sigDet )
     fid_sigdet_stim = fopen(fullfile(path, sprintf('%s_sigdet_stim.eve',filename)),'w+');
     fid_sigdet_resp = fopen(fullfile(path, sprintf('%s_sigdet_resp.eve',filename)),'w+');
 end
 
 % determine error rate
-ER_condition = sum(cueVec=='a' & ER == 0)/sum(cueVec=='a');
+ER_condition = sum(cueVec=='a' & ER == 0 & ~isinf(RT))/sum(cueVec=='a');
 fprintf('Error rate for arrows = %0.4f\n', ER_condition);
 for n = 1:length(coherence_array)
-    ER_condition = sum(cueVec=='d' & ER==0 & cohVec==coherence_array(n))/sum(cueVec=='d' & cohVec==coherence_array(n));
+    ER_condition = sum(cueVec=='d' & ER==0 & ~isinf(RT) & cohVec==coherence_array(n))/sum(cueVec=='d' & cohVec==coherence_array(n));
     fprintf('Error rate for coherence %d = %0.4f\n', coherence_array(n), ER_condition);
 end
 
