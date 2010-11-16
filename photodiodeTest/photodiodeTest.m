@@ -1,3 +1,5 @@
+function photodiodeTest( filename )
+
 % Initialize the USB device:
 global daq;
 
@@ -48,7 +50,9 @@ dot_history = rGraphicsDraw(5000);
 
 % stored upside-down; reverse the y axis
 dot_history (2,:,:) = 1 - dot_history (2,:,:);
-save('photodiodeTestData.mat','direction', 'coherence', 'diameter', 'size', 'loops', 'density', 'speed', 'dot_history');
+
+fname = sprintf('photodiodeTestData_%s.mat', filename);
+save(fname, 'direction', 'coherence', 'diameter', 'size', 'loops', 'density', 'speed', 'dot_history');
 
 rDone;
 
@@ -63,4 +67,4 @@ scatter(x,y);
 hold on;
 scatter(x,-y+1);
 
-% scatter(a(1,:,time),a(2,:,time)) plots all points for a given frame
+end
