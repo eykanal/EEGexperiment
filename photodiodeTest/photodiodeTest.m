@@ -133,7 +133,7 @@ dot_timeHistory = dot_timeHistory - min(dot_timeHistory);
 
 finishedSaving = false;
 while finishedSaving == false
-    fname = sprintf( 'photodiodeTestData_%s.mat', filename );
+    fname = sprintf( 'photodiodeTest_data/photodiodeTestData_%s.mat', filename );
     if ~exist(fname, 'file')
         save(fname, 'direction', 'coherence', 'diameter', 'size', 'loops', 'density', 'speed', 'dot_history', 'dot_timeHistory');
         finishedSaving = true;
