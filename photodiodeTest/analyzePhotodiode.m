@@ -6,8 +6,7 @@ y = sqrt(1-x.^2);
 x = (x+1)/2;
 y = (y+1)/2;
 
-figure(1);
-clf(1);
+figure();
 hold on;
 
 scatter( x, y );
