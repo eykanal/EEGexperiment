@@ -30,6 +30,36 @@ end
 Screen('Preference','SkipSyncTests',0);
 rInit({'screenMode','local','showWarnings',true});
 
+% Identify computer based on display type
+[s,w] = unix('system_profiler SPDisplaysDataType');
+% First look for Mac Pro, then projector, then color LCD. Do in this order 
+% because projector and LCD will probably both be present when projector
+% plugged in.
+if strfind(w, 'B223W')  % mac pro
+
+    monitorWidth    = 47.5;
+    viewingDistance = 63.5;
+
+elseif strfind(w, 'LE1901w')  % MEG recording room
+    
+    monitorWidth    = 93;
+    viewingDistance = 118;
+
+elseif strfind(w, 'Color LCD')  % laptop w/o external
+    
+    monitorWidth    = 28.5;
+    viewingDistance = 60;
+   
+else
+
+    monitorWidth    = rGet('dXscreen', 'monitorWidth');
+    viewingDistance = rGet('dXscreen', 'viewingDistance');
+    
+end
+
+rSet('dXscreen', 1, 'monitorWidth',    monitorWidth);
+rSet('dXscreen', 1, 'viewingDistance', viewingDistance);
+
 % Put up the localizer dot
 direction   = 0;
 coherence   = 25;
@@ -62,10 +92,10 @@ rClear;
 WaitSecs(1);
 
 % Set up actual dots
+size        = floor(0.15 * rGet('dXscreen', 1, 'pixelsPerDegree'));;
 direction   = 0;
 coherence   = 25;
 diameter    = 10;
-size        = 5;
 loops       = 3;
 density     = 20;
 speed       = 7;
