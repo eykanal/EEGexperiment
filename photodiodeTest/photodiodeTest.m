@@ -167,6 +167,6 @@ scatter(x,-y+1);
 scatter(dot_history(1,:,1),dot_history(2,:,1));
 
 figure(2);
-plot(dot_timeHistory);
+bar(dot_timeHistory,ones(1,length(dot_timeHistory)),0.01);
 
 end
