@@ -4,7 +4,7 @@ function photodiodeTest( varargin )
 global daq;
 
 if length(varargin) > 0
-    filename = varargin(1);
+    filename = mat2str(cell2mat(varargin(1)));
 else
     filename = '';
 end
@@ -85,7 +85,8 @@ localizer = rAdd( ...
 );
 
 spacekey = 44;
-rGraphicsDrawSelectiveBreakMulti(inf,[],spacekey);
+%rGraphicsDrawSelectiveBreakMulti(inf,[],spacekey);
+rGraphicsDraw(10000);
 rGraphicsBlank;
 rClear;
 
@@ -143,10 +144,10 @@ while finishedSaving == false
             save(fname, 'direction', 'coherence', 'diameter', 'size', 'loops', 'density', 'speed', 'dot_history', 'dot_timeHistory');
             finishedSaving = true;
         else
-            if ~strcmp( input( 'Save with new name? (Y/n): ', 's' ), 'n' )
-                filename = input ( 'New file name: ', 's' );
-            else
+            if ~strcmp( input( 'Save with new name? (y/N): ', 's' ), 'y' )
                 finishedSaving = true;
+            else
+                filename = input ( 'New file name: ', 's' );
             end
         end
     end
