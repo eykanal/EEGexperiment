@@ -30,7 +30,7 @@ plotLog= 0; %whether to plot everything as a function of log-coherence
 % cdf_type = 3 for gamma funtion
 cdf_type = 3;
 
-filename = sprintf ('subject%d_ses%d.mat', subject, sess);
+filename = sprintf ('subject%d_ses%s.mat', subject, sess);
 load(filename);
 
 if sess==1

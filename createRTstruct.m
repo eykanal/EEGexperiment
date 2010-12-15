@@ -12,7 +12,7 @@ if ~exist('basedir','var')
   basedir = pwd;
 end
 
-load(fullfile(basedir,sprintf('subject%d_ses%d.mat',subject,session)));
+load(fullfile(basedir,sprintf('subject%d_ses%s.mat',subject,session)));
 outFile = fullfile(basedir,sprintf('RTsforArrows_subj%d.mat',subject));
 
 RT_t = RT;
