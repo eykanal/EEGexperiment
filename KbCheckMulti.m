@@ -209,7 +209,7 @@ if macosx
         
         % EK - allow daq responses
         if ~isempty(daq) && daq ~= -1  % don't check if behavioral
-            resp = DaqDIn(daq);
+            resp = DaqDIn(daq,2,4);
             resp = resp(2);
             if resp ~= 224  % 224 = nothing pressed
                             % 232 = left
