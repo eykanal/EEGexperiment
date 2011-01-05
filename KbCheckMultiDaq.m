@@ -1,4 +1,4 @@
-function [keyIsDown,secs, keyCode, deltaSecs] = KbCheckMulti(deviceNumber)
+function [keyIsDown,secs, keyCode, deltaSecs] = KbCheckMultiDaq(deviceNumber)
 % [keyIsDown, secs, keyCode, deltaSecs] = KbCheck([deviceNumber])
 % 
 % Return keyboard status (keyIsDown), time (secs) of the status check, and
@@ -144,9 +144,6 @@ global ptb_kbcheck_disabledKeys;
 % non-empty 
 global ptb_kbcheck_enabledKeys;
 
-% EK - check whether daq is being used.
-global daq;
-
 % Store timestamp of previous KbCheck:
 persistent oldSecs;
 
@@ -176,19 +173,21 @@ if isempty(macosx)
 end
 
 if macosx
-    if nargin==1
-        if deviceNumber==-1
-            % Query all attached keyboards:
-            keyt = kbs;
-        elseif deviceNumber==-2
-            % Query all attached keypads:
-            keyt = kps; 
-        elseif deviceNumber==-3
-            % Query all attached keyboards and keypads:
-            keyt = [kbs kps]; 
-        else
-            % Query a specific keyboard device number:
-            keyt = deviceNumber;
+    if nargin<=1
+        if nargin==1
+            if deviceNumber==-1
+                % Query all attached keyboards:
+                keyt = kbs;
+            elseif deviceNumber==-2
+                % Query all attached keypads:
+                keyt = kps; 
+            elseif deviceNumber==-3
+                % Query all attached keyboards and keypads:
+                keyt = [kbs kps]; 
+            else
+                % Query a specific keyboard device number:
+                keyt = deviceNumber;
+            end
         end
 
         if ~isempty(keyt)
@@ -203,13 +202,14 @@ if macosx
             [keyIsDown, secs, keyCode]= PsychHID('KbCheck', [], ptb_kbcheck_enabledKeys);
         end
         
-    elseif nargin == 0
-        % Query primary keyboard:
-        [keyIsDown, secs, keyCode]= PsychHID('KbCheck', [], ptb_kbcheck_enabledKeys);
-        
         % EK - allow daq responses
-        if ~isempty(daq) && daq ~= -1  % don't check if behavioral
-            resp = DaqDIn(daq,2,4);
+        if ~isempty(deviceNumber) && deviceNumber ~= -1  % don't check if behavioral
+            if ~isempty(keyt)
+                resp = DaqDIn(daq,2,keyt);
+            else
+                resp = DaqDIn(daq,2);
+            end
+            
             resp = resp(2);
             if resp ~= 224  % 224 = nothing pressed
                             % 232 = left
