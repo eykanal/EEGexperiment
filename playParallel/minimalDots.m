@@ -9,7 +9,7 @@ fclose( ptr );
 obj = createJob();
 set( obj, 'FileDependencies', {'jobStartup.m', 'GetPadResp.m'});  % Add psychtoolbox to worker path
 
-task = createTask(obj, @GetPadResp, 1, {4});
+task = createTask(obj, @GetPadResp, 1, {GetKeyboardIndices});
 
 %
 % Initialize DotsX
