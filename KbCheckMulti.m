@@ -144,6 +144,9 @@ global ptb_kbcheck_disabledKeys;
 % non-empty 
 global ptb_kbcheck_enabledKeys;
 
+% EK - check whether daq is being used.
+global daq;
+
 % Store timestamp of previous KbCheck:
 persistent oldSecs;
 
@@ -184,13 +187,16 @@ if macosx
             elseif deviceNumber==-3
                 % Query all attached keyboards and keypads:
                 keyt = [kbs kps]; 
+            elseif any(deviceNumber == DaqDeviceIndex)
+                % EK - Device is daq, don't specify query
+                keyt = [];
             else
                 % Query a specific keyboard device number:
                 keyt = deviceNumber;
             end
         end
 
-        if ~isempty(keyt)
+        if exist('keyt','var') && ~isempty(keyt)
             % Check all devices in vector keyt and merge their state:
             keyIsDown=0; keyCode=zeros(1,256);  % preallocate these variables
             for i=keyt
@@ -203,12 +209,8 @@ if macosx
         end
         
         % EK - allow daq responses
-        if ~isempty(deviceNumber) && deviceNumber ~= -1  % don't check if behavioral
-            if ~isempty(keyt)
-                resp = DaqDIn(daq,2,keyt);
-            else
-                resp = DaqDIn(daq,2);
-            end
+        if ~isempty(daq) && daq ~= -1  % don't check if behavioral
+            resp = DaqDIn(daq,2);
             
             resp = resp(2);
             if resp ~= 224  % 224 = nothing pressed
