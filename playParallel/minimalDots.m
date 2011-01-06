@@ -7,9 +7,19 @@ ptr = fopen( '/tmp/resp.txt', 'w' );
 fclose( ptr );
 
 obj = createJob();
-set( obj, 'FileDependencies', {'jobStartup.m', 'GetPadResp.m'});  % Add psychtoolbox to worker path
+set( obj, 'FileDependencies', {'jobStartup.m', 'GetPadResp.m', 'KbCheckMulti.m'});  % Add psychtoolbox to worker path
 
-task = createTask(obj, @GetPadResp, 1, {GetKeyboardIndices});
+daq = DaqDeviceIndex;
+% if using USB device and two ports show up, use second
+if length( daq ) > 1
+    daq = daq(2);
+
+% if empty, no daq, define as -1 so KbCheckMulti works correctly
+elseif isempty( daq )
+    daq = -1;
+end
+
+task = createTask(obj, @GetPadResp, 1, {daq});
 
 %
 % Initialize DotsX
