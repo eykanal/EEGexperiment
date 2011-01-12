@@ -1,5 +1,17 @@
 function varargout = ParallelTest
 
+    % clear out old temp directories
+    dirs = dir('/tmp');
+    if ~isempty(dirs)
+        for n = 1:length(dirs)
+            if dirs(n).isdir == 1 && length( dirs(n).name ) > 1 && strcmp( dirs(n).name(1:2), 'tr' )
+                temp_dir = sprintf( '/tmp/%s', dirs(n).name );
+                unix( sprintf( 'rm -R %s',temp_dir ) );
+                rmpath( temp_dir );
+            end
+        end
+    end
+
     % put empty file in /tmp so I can check for it
     ptr = fopen( '/tmp/resp.txt', 'w' );
     fclose( ptr );
@@ -39,7 +51,7 @@ function varargout = ParallelTest
         err = get(task, 'Error');
         disp(err.message);
 
-        for n = 1:length(err.cause)s
+        for n = 1:length(err.cause);
             disp(err.cause{n}.message);
         end
     end
