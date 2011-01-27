@@ -94,7 +94,7 @@ while GetSecs - beginTime < 10
     rSet('dXdots',   dotsIdx,        'visible',true);
     rSet('dXtarget', blackTargetIdx, 'visible',true);
 
-    [ mySecs, myKeyCode ] = rGraphicsDrawSelectiveBreakMultiThreaded( inf, [] );
+    [ mySecs, myKeyCode ] = rGraphicsDrawSelectiveBreakMulti( inf, [] );
 
     rSet('dXdots',   dotsIdx,        'visible', false);
     rSet('dXtarget', blackTargetIdx, 'visible', false);
