@@ -26,7 +26,7 @@ for file = 4:length(files)
         % add $6 for each behavioral, check if behav via presence of the
         % ERpsych variable
         if ~isempty( whos( '-file', [filepath '/' files(file).name], 'ERpsych' ) )
-            money = money + 600;
+            money = money + 500;
         end
     end
 end
