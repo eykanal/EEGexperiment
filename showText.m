@@ -1,4 +1,4 @@
-function showText( str )
+function showText( str, xoffset, yoffset )
 %
 % Show text using dXtext method, have subject press space bar to proceed.
 % Standardized to display text such that letters occupy 0.7 degrees in the
@@ -9,6 +9,14 @@ function showText( str )
 %
 % Eliezer Kanal, 10/19/10
 
+if nargin == 1
+    xoffset = 0;
+    yoffset = 0;
+end
+if nargin == 2
+    yoffset = 0;
+end
+
 [wn_, sr_, ppd_, fr_] = rGraphicsGetScreenAttributes;
 font_degrees = 0.7;
 fontsize = floor(font_degrees * ppd_);
@@ -18,11 +26,11 @@ end
 
 for i = 1:length(str)
     textwidth = fontsize * length(str{i})/ppd_;
-    x_pos{i}  = -0.3 * textwidth;
+    x_pos{i}  = -0.3 * textwidth + xoffset;
 end
 
 % Equally distribute lines in middle of screen
-y_pos = font_degrees * (length(str):-1:1) - (floor(length(str)/2));
+y_pos = font_degrees * (length(str):-1:1) - (floor(length(str)/2)) - yoffset;
 y_pos = num2cell(y_pos);
 
 if length(str) == 1
