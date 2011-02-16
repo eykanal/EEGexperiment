@@ -1,6 +1,13 @@
-function [numbers all_num] = dots_behavAnalysis(subj, ses, run)
+function [all_num numbers] = dots_behavAnalysis(subj, ses, run)
+% [numbers all_num] = dots_behavAnalysis(subj, ses, run)
+%
+% subj  = subject id
+% ses   = session #
+% run   = run #
+%
+% 
 
-if ~exist('run', 'var')
+if ~exist( 'run', 'var' )
     run = '';
 else
     run = ['_' num2str(run)];
@@ -8,11 +15,11 @@ end
 
 filename = ['subject' num2str(subj) '_ses' num2str(ses) run '.mat'];
 
-if ~exist(filename,'file')
-    error('File doesn''t exist in path: %s', filename);
+if ~exist( filename, 'file' )
+    error( 'File doesn''t exist in path: %s', filename );
 end
 
-load(filename);
+load( filename );
 
 hard = min( cohVec );
 easy = max( cohVec );
