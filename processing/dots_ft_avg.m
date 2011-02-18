@@ -2,8 +2,12 @@
 % according to coherence and response direction, as well as averaging the
 % arrow-only trials.
 
-% cfg.dataset = fif file
-% subj_data   = matlab run data file
+function dots_ft_avg(subj, sess, dataset)
+% for testing, use:
+%   subject     4
+%   session     8
+%   dataset     4_090710_4_trigFix.fif
+%   
 
 ft_defaults;
 
@@ -11,16 +15,17 @@ ft_defaults;
 % Setup configuration structure
 %
 
-cfg_base = struct;                                      % ## CFG RESET! ##
-cfg_base.dataset = '4_090710_1_trigFix.fif';
-cfg_base.hdr = ft_read_header(cfg_base.dataset);
+cfg_base            = struct;                           % ## CFG RESET! ##
+cfg_base.dataset    = dataset;
+cfg_base.hdr        = ft_read_header(cfg_base.dataset);
 
 
 %
 % Define averaging parameters
 %
 
-subj_data = 'subject4_ses5';
+subj_data = sprintf('subject%i_ses%i', subj, sess);
+save_path = sprintf('/Volumes/Shady\\ Back\\ Bowls/meg_data/Dots/subj%i/matlab-data/', subj);
 
 
 % variables necessary for defineDotsTrials()
@@ -40,32 +45,8 @@ aveParams   = {'coh', 'respdir', 'arrow'};  % currently not analyzing sigdet
 for aveTime = 1:length(aveTimes)
     for aveParam = 1:length(aveParams)
 
-        cfg = cfg_base;                                 % ## CFG RESET! ##
-        
-        cfg.trialfun        = 'defineDotsTrials';
-        cfg.dots.coh        = cohVec;
-        cfg.dots.cue        = cueVec;
-        cfg.dots.ER         = ER;
-        cfg.dots.RT         = RT;
-        cfg.dots.dir_resp   = RDir;
-        cfg.dots.dir_correct = ST;
-        cfg.dots.aveTime    = char(aveTimes(aveTime));
-        cfg.dots.aveParam   = char(aveParams(aveParam));
-        cfg.dots.preTrig    = 600;
-        cfg.dots.postTrig   = 600;
-        cfg.dots.left_RT    = Left_RT;
-        cfg.dots.right_RT   = Right_RT;
-
-        cfg = ft_definetrial(cfg);
-
-        %
-        % Define preprocessing routines
-        %
-
-        cfg.bpfilter        = 'yes';
-        cfg.bpfreq          = [1 40];
-        data_preprocessed   = ft_preprocessing(cfg);
-
+        % Load data        
+        load([save_path subj_data '-preprocessed-'  char(aveTimes(aveTime)) '-' char(aveParams(aveParam))]);
 
         %
         % Averaging & statistics
@@ -104,7 +85,7 @@ for aveTime = 1:length(aveTimes)
 
         data_timelock_stats = ft_timelockstatistics(cfg, data_timelock);
         
-        save([subj_data '-timelockstats-' char(aveTimes(aveTime)) '-' char(aveParams(aveParam))], 'data_timelock_stats');
-        
+        save([save_path subj_data '-timelockstats-' char(aveTimes(aveTime)) '-' char(aveParams(aveParam))], 'data_timelock_stats');
+        clear data_preprocessed;
     end
 end

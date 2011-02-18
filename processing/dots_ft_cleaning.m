@@ -1,5 +1,12 @@
+function dots_ft_cleaning(subj, sess, dataset)
 % cfg.dataset = fif file
 % subj_data   = matlab run data file
+
+% for testing, use:
+%   subject     4
+%   session     8
+%   dataset     4_090710_4_trigFix.fif
+%   
 
 ft_defaults;
 
@@ -7,17 +14,17 @@ ft_defaults;
 % Setup configuration structure
 %
 
-cfg_base = struct;                                      % ## CFG RESET! ##
-cfg_base.dataset = '4_090710_4_trigFix.fif';
-cfg_base.hdr = ft_read_header(cfg_base.dataset);
+cfg_base            = struct;                           % ## CFG RESET! ##
+cfg_base.dataset    = dataset;
+cfg_base.hdr        = ft_read_header(cfg_base.dataset);
 
 
 %
 % Define averaging parameters
 %
 
-subj_data = 'subject4_ses8';
-
+subj_data = sprintf('subject%i_ses%i', subj, sess);
+save_path = sprintf('/Volumes/Shady\\ Back\\ Bowls/meg_data/Dots/subj%i/matlab-data/', subj);
 
 % variables necessary for defineDotsTrials()
 load(subj_data, 'cohVec', 'cueVec', 'ST', 'ER', 'RT', 'Left_RT', 'Right_RT', 'RDir');
@@ -83,6 +90,6 @@ for aveTime = 1:length(aveTimes)
         cfg.bpfreq          = [1 40];
         data_preprocessed   = ft_preprocessing(cfg);
 
-        save([subj_data '-preprocessed-'  char(aveTimes(aveTime)) '-' char(aveParams(aveParam))], 'data_preprocessed');
+        save([save_path subj_data '-preprocessed-'  char(aveTimes(aveTime)) '-' char(aveParams(aveParam))], 'data_preprocessed');
     end
 end
