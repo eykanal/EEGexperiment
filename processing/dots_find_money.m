@@ -21,6 +21,8 @@ for file = 4:length(files)
     if strcmp( files(file).name(end-2:end), 'mat') ...
             && ~isempty( whos( '-file', [filepath '/' files(file).name], 'money' ) )
         t_money = load( [filepath '/' files(file).name], 'money' );
+        fprintf( 1, '%s - $%1.2f\n', num2str(files(file).name), t_money.money/100 );
+        
         money = money + t_money.money;
         
         % add $6 for each behavioral, check if behav via presence of the
@@ -38,3 +40,5 @@ end
 
 % add 15/hr for MEG
 money = money + (meg_hrs * 15);
+
+fprintf( 1, '\nTotal - $%1.2f\n', money/100 );
