@@ -10,7 +10,7 @@ function [money] = dots_find_money(subject, mri, meg_hrs)
 %
 % Eliezer Kanal, 2/7/11
 
-filepath    = ['/Users/eliezerk/Documents/MATLAB/EEGExperiment/data/subj' num2str(subject)];
+filepath    = ['~/Documents/MATLAB/EEGExperiment/data/subj' num2str(subject)];
 files       = dir(filepath);
 
 money = 0;
@@ -35,10 +35,12 @@ end
 
 % add $10.00 for MRI
 if mri
+    fprintf('MRI: $10\n');
     money = money + 1000; 
 end
 
 % add 15/hr for MEG
+fprintf('from MEG: $%1.2f\n',(meg_hrs * 15));
 money = money + (meg_hrs * 15);
 
 fprintf( 1, '\nTotal - $%1.2f\n', money/100 );
