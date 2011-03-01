@@ -25,12 +25,15 @@ for file = 4:length(files)
         t_money = load( [filepath '/' files(file).name], 'money' );
         money = money + t_money.money;
 
-        fprintf( 1, '%s\t$%1.2f\t$%1.2f\n', num2str(files(file).name), t_money.money/100, money/100);
+        fprintf( 1, '%s\t$%1.2f', num2str(files(file).name), t_money.money/100);
         
         % if didn't finish study, add $5 for each behavioral
         if meg_hrs == 0 && ~isempty( whos( '-file', [filepath '/' files(file).name], 'ERpsych' ) )
             money = money + 500;
+            fprintf( 1, ' + $5.00');
         end
+        
+        fprintf( 1, '\t$%1.2f\n', money/100);
     end
 end
 
