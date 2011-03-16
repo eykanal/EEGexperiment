@@ -81,28 +81,6 @@ rSet('dXtarget',    targetIdx,      'visible',  false);
 rSet('dXdots',      dotsIdx,        'visible',  false);
 
 str = {};
-str{1} = 'Respond using the M and Z keys; press M for';
-str{2} = 'rightward motion, and Z for leftward motion.';
-str{3} = '';
-str{4} = '(Press the ''Space'' key to continue.)';
-showText(str);
-
-str = {};
-str{1} = 'You''ll hear a tone when you score a point.';
-str{2} = 'Your current score will be shown every 5 trials.';
-str{3} = '';
-str{4} = '(Press the ''Space'' key to continue.)';
-showText(str);
-
-str = {};
-str{1} = 'Please try to keep your head the same';
-str{2} = 'distance from the screen at all times, with';
-str{3} = 'your gaze centered on the middle of the screen.';
-str{4} = '';
-str{5} = '(Press the ''Space'' key to continue.)';
-showText(str);
-
-str = {};
 str{1} = 'For this first part of the training, you';
 str{2} = 'will be shown a dots pattern for 0.5 seconds.';
 str{3} = 'When the fixation dot turns blue, you should';
@@ -115,10 +93,19 @@ str{9} = '(Press the ''Space'' key to continue.)';
 showText(str);
 
 str = {};
-str{1} = 'Try not to press any keys before the fixation';
-str{2} = 'dot changes from white to blue -- this will';
-str{3} = 'delay the dots from appearing, and you will';
-str{4} = 'hear a buzzing sound.';
-str{5} = '';
-str{6} = 'To begin the task, press the ''Space'' key.';
+str{1} = 'Some things to know:                            ';
+str{2} = '- Respond with M (rightward motion) and Z       ';
+str{3} = '  (leftward motion)                             ';
+str{4} = '- You''ll hear a tone when you answer correctly.';
+str{5} = '- You''ll be shown your score every 5 trials.   ';
+str{6} = '- Keep your head still.                         ';
+str{7} = '- Keep your gaze on the center of the screen.   ';
+str{8} = '- Respond only after the fixation changes from  ';
+str{9} = '  white to blue.                                ';
+str{10} = '';
+str{11} = '(Press the ''Space'' key to continue.)';
+showText(str);
+
+str = {};
+str{1} = 'To begin the task, press the ''Space'' key.';
 showText(str);
