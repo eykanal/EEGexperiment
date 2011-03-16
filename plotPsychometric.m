@@ -30,7 +30,7 @@ plotLog         = 0;    % whether to plot everything as a function of log-cohere
 cdf_type        = 3;
 
 filename = sprintf ('subject%d_ses%s.mat', subject, sess);
-load(filename);
+load(['~/Documents/MATLAB/EEGexperiment/data/subj' num2str(subject) '/' filename]);
 
 coherVec = unique(coherenceVec);
 

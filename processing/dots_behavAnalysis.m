@@ -13,7 +13,7 @@ else
     run = ['_' num2str(run)];
 end
 
-filename = ['subject' num2str(subj) '_ses' num2str(ses) run '.mat'];
+filename = ['~/Documents/MATLAB/EEGExperiment/data/subj' num2str(subj) '/subject' num2str(subj) '_ses' num2str(ses) run '.mat'];
 
 if ~exist( filename, 'file' )
     error( 'File doesn''t exist in path: %s', filename );
