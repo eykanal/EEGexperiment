@@ -1,0 +1,8 @@
+# /
+/data
+
+# /photodiodeTest/
+/photodiodeTest/*.mat
+/photodiodeTest/photodiodeTest_data
+
+/.DS_Store
