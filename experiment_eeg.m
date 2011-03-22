@@ -1,4 +1,4 @@
-function money = experiment_eeg (subject,Behavioral,lowCoh,highCoh,RTfile)
+function money = experiment_eeg (subject,Behavioral,coherence_array,RTfile)
 
 % function money = experiment_eeg (subject,Behavioral,lowCoh,highCoh,RTfile)
 %
@@ -58,18 +58,24 @@ while SessionsCompleted < 1 || exist(strcat(filename, '.mat'),'file') || exist(s
 end
 filename = strcat( filename, '.mat' );
 
+% set coherence_array to always be a three-length vector
+if ~exist('coherence_array','var')
+    coherence_array = zeros(1,3);
+elseif length(coherence_array) == 2
+    coherence_array = [coherence_array(1) 0 coherence_array(3)];
+end
+
 if ~Behavioral
     % flag to skip coherence setting routine
     doQuest = 0; 
   
     % if not behavioral, experiment must be called with coherence values
-    if ~exist('lowCoh','var') || ~exist('highCoh','var')
-        fprintf('please call this experiment with a low and high coherence\n');
+    if ~exist('coherence_array','var') || length(coherence_array) ~= 3
+        fprintf('Please call this experiment with a 2- or 3-entry coherence vector\n');
         return
     end
     
-    numRuns = 4;    % number of runs; if want more, need to increase the size
-                    % of the RSI, Shapes, Cohs, and Cues arrays below
+    numRuns = 5;    % number of runs
     blockdur = 120; % 2-minute blocks (for fMRI/EEG)
     waitdur = 30;   % 30 second blank period
 
@@ -78,15 +84,8 @@ else
     % flag to execute coherence setting routine
     doQuest = 1; 
 
-    if ~exist('lowCoh','var') || isempty(lowCoh)
-        lowCoh = 10;
-    end
-    if ~exist('highCoh','var') || isempty(highCoh)
-        highCoh = 20;
-    end
-    
     numRuns = 1;    % number of runs
-	blockdur = 180; % duration of a single block in seconds (2 min for Behavioral)
+	blockdur = 240; % duration of a single block in seconds (4 min for Behavioral)
     waitdur = 30;   % 30 second blank period
 
 end
@@ -107,29 +106,13 @@ end
 % discrimination; 2: cued-response with a salient arrow cue, dot-motion is
 % irrelevant)
 RSI_poss   = [ 2 2  ];  % Mean RSI ("poss" means possibility)
-Shape_poss = [ 5 10 ];  % Gamma pdf shape parameter for individual RSI
+Shape_poss = [ 10 10 ];  % Gamma pdf shape parameter for individual RSI
                         % (scale = mean/shape)
-coherence_array = [lowCoh highCoh];  % Coherence levels: 3 should be hard,
-                                     % 8 should be easier
 
 if exist('RTfile','var') % Check to make sure there IS an RTfile
     load(RTfile);
     % RTfile contains:
     % RT_t     D_t  CueType_t   TrialCoh_t
-
-    % BE CAREFUL! If the saved variables have the same name as the ones
-    % in this script (i.e., the ones changing during the experiment),
-    % everything will get screwed up. As such, the RT file should store
-    % variables with different names, which can be done by a
-    % post-processing step after the original data is collected. This will
-    % require RTs for every one of the 4 dots conditions, and every one of
-    % the 4 arrow conditions (really 2, since coherence is 0 in those
-    % blocks). We'll want one RT for each block, along with an identifier
-    % of RSI, coherence, and cue-type. Well, if desired, we can just do the
-    % extraction of these subtypes from the RTfile.
-
-    % OK, adding a "_t" to the end of all relevant variables.
-
     RT_struct.fast_arrow_RT = RT_t(find(D_t==RSI_poss(1) & CueType_t=='a'));
     if ~isempty(find(D_t==RSI_poss(2)))
         RT_struct.slow_arrow_RT = RT_t(find(D_t==RSI_poss(2) & CueType_t=='a'));
@@ -244,37 +227,28 @@ end
 rSet('dXscreen', 1, 'monitorWidth',    monitorWidth);
 rSet('dXscreen', 1, 'viewingDistance', viewingDistance);
 
-% 7/19/08: need access to the window pointer for freeze-framing dots.
+% need access to the window pointer for freeze-framing dots.
 wdwPtr = rWinPtr;
 
-% 7/17/07: A bunch of PTB sound manipulation code needs to be initialized:
-% Perform basic initialization of the sound driver:
+% Initialize sound
 InitializePsychSound;
-% Read WAV file from filesystem:
-expdir = fileparts(which('experiment_eeg.m'));
-[y, freq, nbits] = wavread(fullfile(expdir,'SOUND16'));
-wavedata = y';
-nrchannels = size(wavedata,1); % Number of rows == number of channels.
 
-% Open the default audio device [], with default mode [] (==Only playback),
-% and a required latency class of zero 0 == no low-latency mode, as well as
-% a frequency of freq and nrchannels sound channels.
-% This returns a handle to the audio device:
-pahandle_correct = PsychPortAudio('Open', [], [], 0, freq, nrchannels);
-
-% Fill the audio playback buffer with the audio data 'wavedata':
+expdir              = fileparts(which('experiment_eeg.m'));
+[y, freq, nbits]    = wavread(fullfile(expdir,'SOUND16'));
+wavedata            = y';
+nrchannels          = size(wavedata,1);
+pahandle_correct    = PsychPortAudio('Open', [], [], 0, freq, nrchannels);
 PsychPortAudio('FillBuffer', pahandle_correct, wavedata);
 
-% Now open a channel for the anticipatory error sound:
-[y, freq, nbits] = wavread(fullfile(expdir,'errorsound'));
-wavedata = y';
-nrchannels = size(wavedata,1); % Number of rows == number of channels.
-pahandle_antic = PsychPortAudio('Open', [], [], 0, freq, nrchannels);
+[y, freq, nbits]    = wavread(fullfile(expdir,'errorsound'));
+wavedata            = y';
+nrchannels          = size(wavedata,1);
+pahandle_antic      = PsychPortAudio('Open', [], [], 0, freq, nrchannels);
 PsychPortAudio('FillBuffer', pahandle_antic, wavedata);
 
-% Also initialize the KbCheck routine:
+% Initialize the KbCheck routine:
 KbCheckMulti;                   % Initialize keyboard check routine
-triggercode = KbName('LEFTSHIFT');  % Nope, LEFTSHIFT instead of !
+triggercode         = KbName('LEFTSHIFT');  % Nope, LEFTSHIFT instead of !
 
 RT = [];
 bl = 1;
@@ -385,8 +359,7 @@ if doQuest
     
     % use a psychometric block instead of a quest block
     [STpsych, ST_timePsych, RTpsych, ERpsych, RDirPsych, PiDirPsych, ...
-        SubScore, score, premie_t, premie_e, coherenceVec, lowCoh, ...
-        highCoh] = ...
+        SubScore, score, premie_t, premie_e, coherenceVec, coherence_array ] = ...
      psychometric_block ...
         ( RSIconst, Shape_poss(1), coherVec, ...
         NpsychTrials, dotsIdx, targetIdx, blackTargetIdx, ...
@@ -399,42 +372,37 @@ if doQuest
         'RDirPsych','PiDirPsych','coherenceVec','RSI_poss','Shape_poss');
     
     % correct for the possibility that the estimation algorithm is totally 
-    %   off the wall
-    if (lowCoh>8) || (lowCoh<0)
-        lowCoh=8;
+    % off the wall
+    if ( coherence_array(1) > 8 )  || ( coherence_array(1) < 0 )
+        coherence_array(1) = 8;
     end
-    if (highCoh>15) || (highCoh<0)
-        highCoh = 15;
+    if ( coherence_array(2) > 11 )  || ( coherence_array(2) < 0 )
+        coherence_array(2) = 11;
+    end
+    if ( coherence_array(3) > 15 ) || ( coherence_array(3) < 0 )
+        coherence_array(3) = 15;
     end
 end
 
-coherence_array = [ lowCoh highCoh ];
-    
-% Leigh didn't like my previous scheme, since it can fall prey to agressive
-% high-pass filtering (with a really high lower-frequency cutoff). So we
-% now pick two variations on an RSI ordering, two variations on a coherence
-% ordering, and two variations on a cue-type ordering. Then we are free to
-% mix together one ordering of each, for 8 unique condition orderings. 
-% RSI order: A B B A B A A B; or B A A B A B B A
-% Coherence order: C D C D D C D C; or D C D C C D C D 
-% Cue order: E F F E E F F E; or F E E F F E E F
-RSIs = [ RSI_poss(1) RSI_poss(2) RSI_poss(2) RSI_poss(1) RSI_poss(2) RSI_poss(1) RSI_poss(1) RSI_poss(2); ...
-         RSI_poss(2) RSI_poss(1) RSI_poss(1) RSI_poss(2) RSI_poss(1) RSI_poss(2) RSI_poss(2) RSI_poss(1) ];
-Shapes = [ Shape_poss(1) Shape_poss(2) Shape_poss(2) Shape_poss(1) Shape_poss(2) Shape_poss(1) Shape_poss(1) Shape_poss(2); ...
-           Shape_poss(2) Shape_poss(1) Shape_poss(1) Shape_poss(2) Shape_poss(1) Shape_poss(2) Shape_poss(2) Shape_poss(1) ];
-Cohs = [ coherence_array(1) coherence_array(2) coherence_array(1) coherence_array(2) coherence_array(2) coherence_array(1) coherence_array(2) coherence_array(1); ...
-         coherence_array(2) coherence_array(1) coherence_array(2) coherence_array(1) coherence_array(1) coherence_array(2) coherence_array(1) coherence_array(2) ];
-
+% Define the ordering matrices
+RSIs = [ RSI_poss(1) RSI_poss(2) RSI_poss(2) RSI_poss(1) RSI_poss(2) RSI_poss(1); ...
+         RSI_poss(2) RSI_poss(1) RSI_poss(1) RSI_poss(2) RSI_poss(1) RSI_poss(2); ];
+Shapes = [ Shape_poss(1) Shape_poss(2) Shape_poss(2) Shape_poss(1) Shape_poss(2) Shape_poss(1); ...
+           Shape_poss(2) Shape_poss(1) Shape_poss(1) Shape_poss(2) Shape_poss(1) Shape_poss(2); ];
+Cohs = [ coherence_array(1) coherence_array(2) coherence_array(3) coherence_array(1) coherence_array(2) coherence_array(3); ...
+         coherence_array(1) coherence_array(2) coherence_array(3) coherence_array(3) coherence_array(2) coherence_array(1); ...
+         coherence_array(3) coherence_array(1) coherence_array(2) coherence_array(2) coherence_array(3) coherence_array(1); ];
 % 'd': dots; 'a': arrow
 % EK (10/26/10) - removed all arrow ('a') trials
-Cues = [ 'd' 'd' 'd' 'd' 'd' 'd' 'd' 'd'; ...
-         'd' 'd' 'd' 'd' 'd' 'd' 'd' 'd' ];    
+Cues = [ 'd' 'd' 'd' 'd' 'd' 'd'; ...
+         'd' 'd' 'd' 'd' 'd' 'd';];    
 
-% Using Rafal's names for trial-indexing of the returned data:
-% 'ib' refers to 'index beginning' 
-% 'ie' refers to 'index end'
-% 'bl' is the block number
-
+% At this point, check if coherence_array was set; if not, either wasn't set at
+% beginning of experiment, or wasn't set correctly during psychometric training.
+if ~exist('coherence_array','var') || length(coherence_array) ~= 3 || sum(coherence_array) == 0
+    coherence_array = [8 11 15];
+end
+     
 %######################
 %####              ####
 %#### MAIN ROUTINE ####
@@ -548,9 +516,14 @@ for runNo = (runsDone +1):numRuns
         addBlock=0;
     end
 
+    % Using Rafal's names for trial-indexing of the returned data:
+    % 'ib' refers to 'index beginning' 
+    % 'ie' refers to 'index end'
+    % 'bl' is the block number
+
     % execute each block
     for bl = 1 : numblocks
-        %% some formatting
+        % some formatting
         if cue_type(bl) == 'a'
             this_block_type = '**';
         else
