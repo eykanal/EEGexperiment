@@ -1,5 +1,5 @@
 function [ST, ST_time, RT, ER, RDir, PiDirbl, SubScore, score, ...
-    premie_t, premie_d, coherenceVec, coh70perc, coh90perc, params, ...
+    premie_t, premie_d, coherenceVec, estimated_coherence, params, ...
     cdf_type] = ...
 psychometric_block (D, shape, coher, blockdur, dotsIdx, targetIdx, ...
     blackTargetIdx,textIdx_Score,lkey, rkey,  PI, feedback, salary, wdwPtr, ...
@@ -137,15 +137,20 @@ end
 
 switch cdf_type
     case 1
-        coh90perc = (norminv(0.9)-params(2))/params(1);
-        coh70perc = (norminv(0.7)-params(2))/params(1);
+        coh90perc = (norminv(0.90)-params(2))/params(1);
+        coh75perc = (norminv(0.75)-params(2))/params(1);
+        coh65perc = (norminv(0.65)-params(2))/params(1);
     case 2
-        coh90perc = wblinv(0.9,params(1),params(2));
-        coh70perc = wblinv(0.7,params(1),params(2));
+        coh90perc = wblinv(0.90,params(1),params(2));
+        coh75perc = wblinv(0.75,params(1),params(2));
+        coh65perc = wblinv(0.65,params(1),params(2));
     case 3
-        coh90perc = gaminv(0.9,params(1),params(2));
-        coh70perc = gaminv(0.7,params(1),params(2));
+        coh90perc = gaminv(0.90,params(1),params(2));
+        coh75perc = gaminv(0.75,params(1),params(2));
+        coh65perc = gaminv(0.65,params(1),params(2));
 end %switch
+
+estimated_coherence = [coh65perc coh75perc coh90perc];
 
   
 %coh80perc = gaminv(0.8,params(1),params(2));
