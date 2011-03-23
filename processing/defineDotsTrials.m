@@ -1,9 +1,16 @@
 function trl = defineDotsTrials(cfg)
 % requires:
-%   cfg.dots.aveParam   One of {'coh', 'respdir', 'arrow', 'sigdet'}
+%   cfg.dots.aveParam   1xn cell, each cell containing a 1x2 cell. First cell
+%                       is one of {'coh', 'respdir', 'arrow', 'sigdet'},
+%                       second cell contains the values to be iterated over
+%                       (i.e., coherence values, response directions, arrow
+%                       directions, etc.)
 %   cfg.dots.aveTime    One of {'stim', 'resp'}
 %   cfg.dots.preTrig    time before trigger onset averaging should begin
 %   cfg.dots.postTrig   time after trigger onset averaging should begin
+%
+% Triggers from STI101, normalized to be 1 ms long
+%   cfg.dots.data
 %
 % All of the below come directly from the subject's matlab run data file.
 %   cfg.dots.coh
@@ -28,20 +35,6 @@ function trl = defineDotsTrials(cfg)
 %     offset
 %     duration
 
-hdr   = fiff_setup_read_raw( cfg.dataset );
-picks = fiff_pick_types( hdr.info, false, false, false, {'STI101'} );
-trig  = fiff_read_raw_segment( hdr, hdr.first_samp, hdr.last_samp, picks );
-
-% Fix so each pulse is exactly 1 ms long
-trig(trig > 0 & [0 diff(trig)] <= 0) = 0;
-
-data.values     = trig(trig>0);
-data.times.raw  = find(trig>0);
-
-% Time of trigger pulse in ms, including initial skip
-data.times.stim = data.times.raw(data.values == 1);
-data.times.resp = data.times.raw(data.values == 2);
-
 % some files won't contain signal detection routine, if so skip it
 sigDet = 1;
 if ~isfield( cfg.dots, 'left_RT' ) || ~isfield( cfg.dots, 'right_RT' )
@@ -52,6 +45,7 @@ if ~isfield( cfg.dots, 'left_RT' ) || ~isfield( cfg.dots, 'right_RT' )
 end
 
 % simplify var names
+data        = cfg.dots.data;
 coh         = cfg.dots.coh;
 cue         = cfg.dots.cue;
 ER          = cfg.dots.ER;
@@ -62,6 +56,10 @@ left_RT     = cfg.dots.left_RT;
 right_RT    = cfg.dots.right_RT;
 preTrig     = cfg.dots.preTrig;
 postTrig    = cfg.dots.postTrig;
+
+if isfield(cfg.dots, 'paramValue')
+    paramValue  = cfg.dots.paramValue;
+end
 
 % Number of trigger onsets should equal number of offsets.
 if length(data.times.stim) ~= length(data.times.resp)
@@ -144,19 +142,17 @@ switch cfg.dots.aveParam
         trl(:,4) = 1;
 
     case 'coh'
-        goodResponses = ( cue == 'd' & ER == 0 & ~isinf(RT) );
+        goodResponses = ( cue == 'd' & ER == 0 & ~isinf(RT) & coh == paramValue );
         len = length( times( goodResponses ) );
         trl = zeros( len, 4 );
 
         trl(:,1) = times( goodResponses )' - preTrig;
         trl(:,2) = times( goodResponses )' + postTrig;
         trl(:,3) = 0;
-        % 1 = easy, 2 = hard
-        trl(:,4) = 1;
-        trl( coh( goodResponses ) == min( coh ), 4 ) = 2;
+        trl(:,4) = paramValue;
         
     case 'respdir'
-        goodResponses = ( cue == 'd' & ER == 0 & ~isinf(RT) );
+        goodResponses = ( cue == 'd' & ER == 0 & ~isinf(RT) & dir_resp == paramValue );
         len = length( times( goodResponses ) );
         trl = zeros( len, 4 );
 
@@ -170,7 +166,7 @@ switch cfg.dots.aveParam
 
     case 'arrow'
         % redefine good_responses to 'cue == a', reset len
-        goodResponses = ( cue == 'a' & ER == 0 & ~isinf(RT) );
+        goodResponses = ( cue == 'a' & ER == 0 & ~isinf(RT) & dir_correct == paramValue );
         len = length( times( goodResponses ) );
         trl = zeros( len, 4 );
 
