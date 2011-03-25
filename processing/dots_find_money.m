@@ -12,6 +12,7 @@ function dots_find_money(subject, mri, meg_hrs)
 
 filepath    = ['~/Documents/MATLAB/EEGExperiment/data/subj' num2str(subject)];
 files       = dir(filepath);
+addpath(filepath);
 
 money = 0;
 
@@ -21,7 +22,7 @@ fprintf('\n');
 for file = 4:length(files)
     % if (1) the file is a mat file and (2) contains the variable "money"
     if strcmp( files(file).name(end-2:end), 'mat') ...
-            && ~isempty( whos( '-file', [filepath '/' files(file).name], 'money' ) )
+            && ~isempty( whos( '-file', files(file).name, 'money' ) )
         t_money = load( [filepath '/' files(file).name], 'money' );
         money = money + t_money.money;
 

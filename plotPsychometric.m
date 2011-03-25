@@ -104,10 +104,14 @@ if plotLog
     set(gca,'XTickLabel', coherVec);
 end
 line(xlim,[1 1]);  % mark where the response onset begins
+ylim_ = get(gca,'YLim');
+set(gca,'YLim',[min(0.98,ylim_(1)) ylim_(2)]);
+
 hold on
 xlabel('coherence (%)');
 ylabel('RT');
 
+display(coherVec);
 display(acc);
 display(meanRT);
 
