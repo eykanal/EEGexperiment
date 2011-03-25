@@ -453,6 +453,7 @@ showText(str);
 if ~exist('runsDone','var')
 	runsDone = 0;
 end
+money_cum = 0;
 
 % the main experimental loop
 for runNo = (runsDone +1):numRuns
@@ -532,7 +533,7 @@ for runNo = (runsDone +1):numRuns
         
         fprintf(1, 'This block (%d/%d): ''%s-%02d''', bl, numblocks, cue_type(bl), this_block_type);
         
-        resting_arrow(numblocks - bl + 1 + addBlock, money, cue_type(bl) );
+        resting_arrow(numblocks - bl + 1 + addBlock, money_cum, cue_type(bl) );
         
         [STbl, irrelDirbl, ST_timebl, arrow_onsetbl, arrow_durbl, ...
             arrow_offsetbl,RTbl, ERbl, RDirbl, PiDirbl, score, ...
@@ -569,7 +570,8 @@ for runNo = (runsDone +1):numRuns
         Premie_d(ib:ie)     = premie_d;	
 
         money = money + score * salary;
-        
+        money_cum = money_cum + money;
+
         % display average performance for this block, for all blocks up to
         % now
         cur_perform = 100 * (1 - (sum(ERbl)/length(ERbl)));
@@ -625,7 +627,7 @@ if ~Behavioral
     % (leading to a total experiment time of 90 minutes):
 
     str = {};
-    str{1} = 'OK, just two shorter blocks left.';
+    str{1} = 'OK, just two blocks left.';
     str{2} = '';
     str{3} = '(Press the ''Space'' key to continue.)';
     showText(str);
@@ -634,6 +636,8 @@ if ~Behavioral
     str{1} = 'These two blocks will each last 2 minutes.';
     str{2} = 'In these blocks, simply press the specified';
     str{3} = 'key as soon as you see any dots at all.';
+    str{4} = '';
+    str{5} = '(Press the ''Space'' key to continue.)';
     showText(str);
 
     str{1} = 'In the first block, always press the Z key';
@@ -660,11 +664,10 @@ if ~Behavioral
     str{6} = sprintf('Total earned: $%.2f', money/100);
     showText(str);
 
-    SDdur = 120;
     [Left_ST, Left_ST_time, Left_RT, Left_ER, score1, Left_premie_t, ...
         Left_premie_d] = ...
     sig_det_block( ...
-        RSI_poss(1), Shape_poss(1), coherence_array(1), SDdur, 'Left', ...
+        RSI_poss(1), Shape_poss(1), coherence_array(1), blockdur, 'Left', ...
         dotsIdx, targetIdx, blackTargetIdx, textIdx_Score, ppd_, lkey, ...
         rkey, money, salary,pahandle_correct, pahandle_antic, daq, ...
         contrast_factor);
@@ -752,7 +755,7 @@ SessionsCompleted = SessionsCompleted + 1;
 save( subj_order_file, 'SessionsCompleted' );
 
 
-thankyou( money );
+thankyou( money_cum );
 
 rDone;
 % Close the audio device:
