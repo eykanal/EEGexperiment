@@ -1,4 +1,4 @@
-function [keyIsDown,secs, keyCode, deltaSecs] = KbCheckMultiDaq(deviceNumber)
+function [keyIsDown,secs, keyCode, deltaSecs] = KbCheckMulti(deviceNumber)
 % [keyIsDown, secs, keyCode, deltaSecs] = KbCheck([deviceNumber])
 % 
 % Return keyboard status (keyIsDown), time (secs) of the status check, and
@@ -217,6 +217,11 @@ if macosx
                             % 232 = left
                             % 240 = right
                             % 248 = both
+                            % 255 = cable not plugged in, doofus
+                if resp == 255
+                    error('Cable not plugged in');
+                end
+                
                 keyIsDown = 1;
                 secs = GetSecs;
 

@@ -1,21 +1,23 @@
 % close display
-rDone;
-rClear;
-Screen CloseAll;
+try
+    rDone;
+    rClear;
+    Screen CloseAll;
+end
 
 % close running threads
 rsc = findResource;
 [pending queued running finished] = findJob(rsc);
-if length(pending) > 1
+if ~isempty(pending)
     destroy(pending);
 end
-if length(queued) > 1
+if ~isempty(queued)
     destroy(queued);
 end
-if length(running) > 1
+if ~isempty(running)
     destroy(running);
 end
-if length(finished) > 1
+if ~isempty(finished)
     destroy(finished);
 end
 
