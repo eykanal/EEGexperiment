@@ -21,10 +21,9 @@ end
 
 load( filename );
 
-hard = min( cohVec );
-easy = max( cohVec );
+coherences = unique( cohVec );
 
-numbers = cell(9,8);
+numbers = cell( numblocks+1, 8 );
 numbers(1,:) = {'sess','block','type','diff','#','perf','RT','RT std'};
 
 % loop through blocks
@@ -44,18 +43,17 @@ for n = min(blocknum):max(blocknum)
     numbers(row+1,:) = {ses n type diff num perf rt rt_std};
 end
 
-hard_num    = length( ER( cueVec == 'd' & cohVec == hard ) );
-easy_num    = length( ER( cueVec == 'd' & cohVec == easy ) );
-hard_perf   = 1 - mean( ER( cueVec == 'd' & cohVec == hard ) );
-easy_perf   = 1 - mean( ER( cueVec == 'd' & cohVec == easy ) );
-rt_hard     = mean( RT( cueVec == 'd' & cohVec == hard ) );
-rt_hard_std = std(  RT( cueVec == 'd' & cohVec == hard ) );
-rt_easy     = mean( RT( cueVec == 'd' & cohVec == easy ) );
-rt_easy_std = std(  RT( cueVec == 'd' & cohVec == easy ) );
+num_coherences = length(coherences);
+all_num = { 'sess', 'diff', '#', 'perf', 'RT', 'RT std' };
 
-all_num = { 'sess', 'diff', '#',        'perf',     'RT',       'RT std'; ...
-            ses,    hard,   hard_num,   hard_perf,  rt_hard,    rt_hard_std; ...
-            ses,    easy,   easy_num,   easy_perf,  rt_easy,    rt_easy_std};
+for n=1:num_coherences
+    num    = length( ER( cueVec == 'd' & cohVec == coherences(n)) );
+    perf   = 1 - mean( ER( cueVec == 'd' & cohVec == coherences(n) ) );
+    rt     = mean( RT( cueVec == 'd' & cohVec == coherences(n) ) );
+    rt_std = std(  RT( cueVec == 'd' & cohVec == coherences(n) ) );
+
+    all_num(n+1,:) = { ses, coherences(n), num, perf, rt, rt_std };
+end
         
 disp( all_num );
 disp( numbers );
