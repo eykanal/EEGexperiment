@@ -1,1 +1,0 @@
-function intermission_wrapper( togo, money );% This function allows repeated calling of intermission:% Now pause and print timer values:pauselength = 600; % 10 minute intermission% pauselength = 120;increment = 5;for i = 1:pauselength/increment;	intermission( togo, money, pauselength - increment*i, increment);endscreen('CloseAll');
