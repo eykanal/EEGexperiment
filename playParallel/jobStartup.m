@@ -1,7 +1,8 @@
 function jobStartup(job)
 
-PTB_path = '/Users/eliezerk/Documents/MATLAB/Psychtoolbox3/';
-addpath( PTB_path );
+PTBpath = 'Documents/MATLAB/Psychtoolbox3/';
+fullPTBpath = pathRelToHome(PTBpath);
+addpath( fullPTBpath );
 
 curr_dir = pwd;
 cd( PTB_path );
