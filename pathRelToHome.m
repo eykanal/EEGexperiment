@@ -11,6 +11,7 @@ function newDir = pathRelToHome( directory )
 
 cmd = ['cd ~/' directory '; pwd'];
 [status newDir] = unix( cmd );
+newDir = strtrim( newDir );
 
 if ~isempty(findstr('No such file', newDir))
     error('Folder does not exist within home directory.');
