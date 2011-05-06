@@ -1,8 +1,9 @@
+# everywhere
+.DS_Store
+
 # /
 /data
 
 # /photodiodeTest/
 /photodiodeTest/*.mat
 /photodiodeTest/photodiodeTest_data
-
-/.DS_Store
