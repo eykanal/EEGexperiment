@@ -5,6 +5,7 @@ function trl = defineDotsTrials(cfg)
 %                       second cell contains the values to be iterated over
 %                       (i.e., coherence values, response directions, arrow
 %                       directions, etc.)
+%   cfg.dots.paramValue Specific value of cfg.dots.aveParam to be averaged
 %   cfg.dots.aveTime    One of {'stim', 'resp'}
 %   cfg.dots.preTrig    time before trigger onset averaging should begin
 %   cfg.dots.postTrig   time after trigger onset averaging should begin
@@ -45,6 +46,7 @@ if ~isfield( cfg.dots, 'left_RT' ) || ~isfield( cfg.dots, 'right_RT' )
 end
 
 % simplify var names
+aveParam    = cfg.dots.aveParam;
 data        = cfg.dots.data;
 coh         = cfg.dots.coh;
 cue         = cfg.dots.cue;
@@ -57,6 +59,11 @@ right_RT    = cfg.dots.right_RT;
 preTrig     = cfg.dots.preTrig;
 postTrig    = cfg.dots.postTrig;
 
+% paramValue must be present for some, but not for all, so only throw error
+% if needed
+if ( strcmp(aveParam, 'coh') || strcmp(aveParam, 'respdir') || strcmp(aveParam, 'arrow') ) && ~isfield(cfg.dots, 'paramValue')
+    error(['Please specify the ' aveParam ' value to be averaged in cfg.dots.aveParam.']);
+end
 if isfield(cfg.dots, 'paramValue')
     paramValue  = cfg.dots.paramValue;
 end
@@ -86,32 +93,28 @@ if length([coh right_RT left_RT]) ~= length(data.times.stim)
     
     % Re-check to see if it still doesn't match
     if length([coh right_RT left_RT]) ~= length(data.times.stim)
-        manual_break = true;
-    end
 
-    % This is the basic troubleshooting routine to determine where the
-    % problem is (whether the PTB file or MEG file is shorter, and which
-    % entry is the missing one)
-    PTB_RT = RT';
-    MEG_RT = (data.times.resp' - data.times.stim') / 1000;
-    
-    PTB_len = length(PTB_RT);
-    MEG_len = length(MEG_RT);
-    
-    % append zeros to the end of the shorter one so the subtraction works
-    if(MEG_len > PTB_len)
-        PTB_RT = [PTB_RT; zeros(MEG_len - PTB_len,1)];
-    else
-        MEG_RT = [MEG_RT; zeros(PTB_len - MEG_len,1)];
-    end
-    
-    diff_RT = MEG_RT - PTB_RT;
-    disp(diff_RT);
+        % This is the basic troubleshooting routine to determine where the
+        % problem is (whether the PTB file or MEG file is shorter, and which
+        % entry is the missing one)
+        PTB_RT = RT';
+        MEG_RT = (data.times.resp' - data.times.stim') / 1000;
 
-    % Including a catch here so I can skip the error in manual
-    % troubleshooting. See end of file for useful commands.
-    if ~exist( 'manual_break', 'var' )
-        error('PsychToolbox and STI101 trigger onsets report unequal number of trials! Examine the above array to find which entry is missing.');
+        PTB_len = length(PTB_RT);
+        MEG_len = length(MEG_RT);
+
+        % append zeros to the end of the shorter one so the subtraction works
+        if(MEG_len > PTB_len)
+            PTB_RT = [PTB_RT; zeros(MEG_len - PTB_len,1)];
+        else
+            MEG_RT = [MEG_RT; zeros(PTB_len - MEG_len,1)];
+        end
+
+        diff_RT = MEG_RT - PTB_RT;
+        disp(diff_RT);
+
+        warning('PsychToolbox and STI101 trigger onsets report unequal number of trials! Examine the above array to find which entry is missing.');
+        keyboard;
     end
 end
 
@@ -138,7 +141,7 @@ switch cfg.dots.aveParam
         % The 'max' function ensures we'll have good data for at least 300
         % ms after the longest trial.
         trl(:,2) = times( goodResponses )' + postTrig + max(data.times.resp - data.times.stim);
-        trl(:,3) = 0;
+        trl(:,3)  = -preTrig;
         trl(:,4) = 1;
 
     case 'coh'
@@ -148,7 +151,7 @@ switch cfg.dots.aveParam
 
         trl(:,1) = times( goodResponses )' - preTrig;
         trl(:,2) = times( goodResponses )' + postTrig;
-        trl(:,3) = 0;
+        trl(:,3)  = -preTrig;
         trl(:,4) = paramValue;
         
     case 'respdir'
@@ -159,7 +162,7 @@ switch cfg.dots.aveParam
         % Average based on response direction
         trl(:,1) = times( goodResponses )' - preTrig;
         trl(:,2) = times( goodResponses )' + postTrig;
-        trl(:,3) = 0;
+        trl(:,3)  = -preTrig;
         % 1 = left, 2 = right
         trl(:,4) = 1;
         trl( dir_resp( goodResponses ) == 'R', 4 ) = 2;
@@ -172,7 +175,7 @@ switch cfg.dots.aveParam
 
         trl(:,1) = times( goodResponses )' - preTrig;
         trl(:,2) = times( goodResponses )' + postTrig;
-        trl(:,3) = 0;
+        trl(:,3)  = -preTrig;
         % 1 = left, 2 = right
         trl(:,4) = 1;
         trl( dir_correct( goodResponses ) == 'R' , 4 ) = 2;
@@ -186,7 +189,7 @@ switch cfg.dots.aveParam
 
             trl(:,1) = times( length(coh)+1 : length(coh)+length(sigdet_RT) )' - preTrig;
             trl(:,2) = times( length(coh)+1 : length(coh)+length(sigdet_RT) )' + postTrig;
-            trl(:,3) = 0;
+            trl(:,3)  = -preTrig;
             % 1 = left, 2 = right
             trl(:,4) = 1;
             trl( 1:length(Left_RT), 4 ) = 2;
