@@ -111,7 +111,7 @@ hold on
 xlabel('coherence (%)');
 ylabel('RT');
 
-display(coherVec);
+display(coherVec');
 display(acc);
 display(meanRT);
 
