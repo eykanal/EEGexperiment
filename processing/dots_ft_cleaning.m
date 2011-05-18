@@ -16,8 +16,9 @@ function dots_ft_cleaning(subj, sess, run, dataset)
 %   session     5
 %   dataset     4_090710
 %
-% Eliezer Kanal, 5/3/2011
+% Eliezer Kanal, 5/2011
 
+dbstop if error
 ft_defaults;
 
 % re-add the directories to the path to ensure that all subjects are
@@ -25,7 +26,7 @@ ft_defaults;
 addpath(genpath('/Users/eliezerk/Documents/MATLAB/EEGExperiment/data/'));
 savepath;
 
-subj_data       = sprintf('subject%i_ses%i_%i.mat', subj, sess, run);
+subj_data       = sprintf('subject%i_ses%i_%i', subj, sess, run);
 save_path       = sprintf('/Volumes/ShadyBackBowls/meg_data/Dots/%i/matlab-files/', subj);
 meg_full_file   = sprintf('/Volumes/ShadyBackBowls/meg_data/Dots/%i/%s', subj, dataset);
 
@@ -34,15 +35,21 @@ meg_full_file   = sprintf('/Volumes/ShadyBackBowls/meg_data/Dots/%i/%s', subj, d
 %
 
 if ~exist(meg_full_file, 'file')
-    error('fif file not found. Please verify %s exists and that trigger_fix has been run.', meg_full_file)
+    error('fif file not found. Please verify %s exists and that trigger_fix has been run.', meg_full_file);
 end
 
-if ~exist(subj_data, 'file')
-    error('Subject datafile (%s) not found.', subj_data);
+if ~exist([subj_data '.mat'], 'file')
+    error('Subject datafile (%s) not found.', [subj_data '.mat']);
 end
 
 if ~exist(save_path, 'dir')
     mkdir(save_path);
+end
+
+% Run trigger_fix if necessary
+if isempty( strfind( meg_full_file, 'trigFix' ) )
+    disp('Trigger_fix not yet run, executing now...');
+    meg_full_file = trigger_fix( meg_full_file );
 end
 
 cfg_base            = struct;                           % ## CFG RESET! ##
@@ -66,7 +73,7 @@ data.times.stim = data.times.raw(data.values == 1);
 data.times.resp = data.times.raw(data.values == 2);
 
 % variables necessary for defineDotsTrials()
-load(subj_data, 'cohVec', 'cueVec', 'ST', 'ER', 'RT', 'Left_RT', 'Right_RT', 'RDir');
+load([subj_data '.mat'], 'cohVec', 'cueVec', 'ST', 'ER', 'RT', 'Left_RT', 'Right_RT', 'RDir');
 
 if ~exist( 'Left_RT', 'var' )
     Left_RT = [];
@@ -117,35 +124,78 @@ for aveTime = 1:length(aveTimes)
             cfg.baselinewindow  = [-0.9 -0.6];
             data_preprocessed   = ft_preprocessing(cfg);
             
-            % Examine data for noise
-            cfg.channel         = 'M*';  %remove STI channels
-            cfg.method          = 'trial';
-            cfg.alim            = 1e-12;
-            cfg.megscale        = 1;
-            cfg.eogscale        = 5e-8;
-            cfg.gradscale       = 0.05;
-            cfg.dots.artifact   = ft_rejectvisual(cfg, data_preprocessed);
-keyboard;
+            % scale down gradiometers
+            grad_scale = 1;
+            if grad_scale == 1
+                grads               = regexp(data_preprocessed.label, 'MEG\d{3}[23]');  % find them
+                grads               = ~(cellfun(@isempty, grads));  % convert from cell to bool
 
-            % temp - show frequency plot to determine whether need use
-            % notch filter
-            cfg_tmp             = cfg_base;
-            cfg_tmp.output      = 'pow';
-            cfg_tmp.method      = 'mtmconvol';
-            cfg_tmp.taper       = 'hanning';
-            cfg_tmp.foi         = 1:30;
-            cfg_tmp.t_ftimwin   = 7./cfg_tmp.foi;
-            cfg_tmp.toi         = -0.5:0.05:0.5;
-            data_freq           = ft_freqanalysis(cfg_tmp, data_preprocessed);
+                for n = 1:length(data_preprocessed.trial)
+                    % ## Eventually, determine variance of mags, grads, 
+                    % ## scale grads in proportion to difference between
+                    % ## variances. For now, just scale down to 5% of
+                    % ## original.
+
+                    data_preprocessed.trial{n}(grads, :) = data_preprocessed.trial{n}(grads, :)*0.05;
+                end
+            end
             
-            cfg_tmp             = cfg_base;
-            cfg_tmp.zlim        = [-3e-27 3e-27];	        
-            cfg_tmp.showlabels  = 'yes';	
-            cfg_tmp.layout      = 'neuromag306mag.lay';
-            figure();
-            ft_multiplotTFR(cfg_tmp, data_freq);
-            keyboard;
+            % The while loop allows viewing of the TFR, and then subsequent
+            % re-denoising, if necessary
+            tfr_denoise_cont = 'y';
+            while strcmp( tfr_denoise_cont, 'y' )
+                
+                reject_vis_cont = 'y';
+                while strcmp( reject_vis_cont, 'y' )
+                    % Examine data for noise
+                    cfg.channel         = 'M*';  %remove STI channels
+                    cfg.method          = 'channel';
+                    cfg.alim            = 1e-12;
+                    cfg.megscale        = 1;
+                    cfg.eogscale        = 5e-8;
+                    %cfg.gradscale       = 0.05;
+                    data_preprocessed   = ft_rejectvisual(cfg, data_preprocessed);
 
+                    cfg.channel         = 'M*';  %remove STI channels
+                    cfg.method          = 'trial';
+                    cfg.alim            = 1e-12;
+                    cfg.megscale        = 1;
+                    cfg.eogscale        = 5e-8;
+                    %cfg.gradscale       = 0.05;
+                    data_preprocessed   = ft_rejectvisual(cfg, data_preprocessed);
+
+                    beep;
+                    reject_vis_cont = input( 'Do you want to re-examine the trials/channels? (y/n) ', 's' );
+                end
+
+                % temp - show frequency plot to determine whether need use
+                % notch filter
+                cfg_tmp             = cfg_base;
+                cfg_tmp.output      = 'pow';
+                cfg_tmp.method      = 'mtmconvol';
+                cfg_tmp.taper       = 'hanning';
+                cfg_tmp.foi         = 1:30;
+                cfg_tmp.t_ftimwin   = 7./cfg_tmp.foi;
+                cfg_tmp.toi         = -0.5:0.05:0.5;
+                data_freq_fixWind   = ft_freqanalysis(cfg_tmp, data_preprocessed);
+
+                cfg_tmp.t_ftimwin   = 0.5*ones(length(cfg_tmp.foi));
+                data_freq_varWind   = ft_freqanalysis(cfg_tmp, data_preprocessed);
+
+                cfg_tmp             = cfg_base;
+                cfg_tmp.zlim        = [-3e-27 3e-27];	        
+                cfg_tmp.showlabels  = 'yes';	
+                cfg_tmp.layout      = 'neuromag306all.lay';
+
+                figure();
+                ft_multiplotTFR(cfg_tmp, data_freq_fixWind);
+                figure();
+                ft_multiplotTFR(cfg_tmp, data_freq_varWind);
+keyboard;
+                beep;
+                tfr_denoise_cont = input( 'Do you want to re-examine the trials/channels? (y/n) ', 's' );
+            end
+            
             savefile = [subj_data '-preprocessed-'  char(aveTimes(aveTime)) '-' num2str(aveParams{aveParam}{1}) '-' num2str(aveParams{aveParam}{2}(aveParamValue)) '.mat'];
             save([save_path savefile], 'data_preprocessed');
             disp(['File saved: ' savefile]);
