@@ -130,7 +130,7 @@ else
     times = data.times.resp;
 end
 
-% do from 600 ms before onset to 600 after, whether stim or resp
+% do from preTrig ms before onset to postTrig ms after, whether stim or resp
 switch cfg.dots.aveParam
     case 'all'
         goodResponses = ( ER == 0 & ~isinf(RT) );
