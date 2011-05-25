@@ -1,4 +1,4 @@
-function dots_cleaning(subj, sess, run, dataset, aveTimes, aveParams)
+function dots_cleaning(subj, sess, run, dataset, aveTimes, aveParams, analysisTimes)
 %
 % function dots_ft_cleaning(subj, sess, run, dataset)
 %
@@ -19,6 +19,7 @@ function dots_cleaning(subj, sess, run, dataset, aveTimes, aveParams)
 % Eliezer Kanal, 5/2011
 
 dbstop if error
+dbstop in dots_cleaning.m at averaging
 ft_defaults;
 
 % re-add the directories to the path to ensure that all subjects are
@@ -90,6 +91,10 @@ if isempty('aveParams')
     aveParams   = {{'coh', unique(cohVec)}, {'respdir','RL'}};  % currently not analyzing sigdet or arrow
 end
 
+if isempty('analysisTimes')
+    analysisTimes = [1000 1000];
+end
+
 % preprocess for each averaging parameter, both at stimulus and response
 for aveParam = 1:length(aveParams)
     for aveTime = 1:length(aveTimes)
@@ -106,8 +111,8 @@ for aveParam = 1:length(aveParams)
             cfg.dots.RT         = RT;
             cfg.dots.dir_resp   = RDir;
             cfg.dots.dir_correct = ST;
-            cfg.dots.preTrig    = 1000;
-            cfg.dots.postTrig   = 2000;
+            cfg.dots.preTrig    = analysisTimes(1);
+            cfg.dots.postTrig   = analysisTimes(2);
             cfg.dots.left_RT    = Left_RT;
             cfg.dots.right_RT   = Right_RT;
 
@@ -154,18 +159,11 @@ for aveParam = 1:length(aveParams)
                 reject_vis_cont = 'y';
                 while strcmp( reject_vis_cont, 'y' )
                     
-                    % Plot averaged general activity
-                    cfg                 = [];
-                    cfg.layout          = 'neuromag306all.lay';
-                    cfg.showlabels      = 'no';
-                    cfg.xlim            = [-0.3 0.8];
-                    figure();
-                    ft_multiplotER(cfg, data_preprocessed);
-                    save_figure(gcf);
+                    % display plots
+                    plot_time_freq(data_preprocessed);
                     
                     % Examine data for noise
                     cfg.channel         = 'M*';  %remove STI channels
-                    %cfg.alim            = 1e-12;
                     cfg.megscale        = 1;
                     cfg.eogscale        = 5e-8;
 
@@ -239,31 +237,10 @@ for aveParam = 1:length(aveParams)
                 view_freq_plots = input( 'Do you want to see time/frequency plots? (y/N) ', 's' );
                 
                 if strcmp( view_freq_plots, 'y' )
+                    
                     % plot averaged timeseries
-                    cfg             = [];
-                    cfg.layout      = 'neuromag306all.lay';
-                    cfg.showlabels  = 'no';
-                    figure();
-                    ft_multiplotER( cfg, data_preprocessed );
-                    save_figure(gcf);
+                    plot_time_freq(data_preprocessed);
                     
-                    % plot frequency
-                    cfg             = [];
-                    cfg.method      = 'mtmfft';
-                    cfg.output      = 'pow';
-                    cfg.calcdof     = 'yes';
-                    cfg.taper       = 'hanning';
-                    cfg.foilim      = [1 40];
-                    data_freq       = ft_freqanalysis( cfg, data_preprocessed );
-                    
-                    cfg             = [];
-                    cfg.layout      = 'neuromag306all.lay';
-                    cfg.showlabels  = 'no';
-                    cfg.ylim        = [0 3e-27];
-                    figure();
-                    ft_multiplotER( cfg, data_freq );
-                    save_figure(gcf);
-
                     % plot TFR
                     cfg             = [];
                     cfg.channel     = 'M*';
@@ -272,11 +249,10 @@ for aveParam = 1:length(aveParams)
                     cfg.taper       = 'hanning';
                     cfg.foi         = 1:30;
                     cfg.t_ftimwin   = 2./cfg.foi;
-                    cfg.toi         = -0.5:0.05:1.5;
+                    cfg.toi         = -analysisTimes(1):0.05:analysisTimes(2);
                     data_freq_varWind = ft_freqanalysis(cfg, data_preprocessed);
 
                     cfg             = [];
-                    cfg.zlim        = [-3e-27 3e-27];	        
                     cfg.showlabels  = 'no';	
                     cfg.layout      = 'neuromag306all.lay';
                     figure();
@@ -294,9 +270,31 @@ for aveParam = 1:length(aveParams)
             disp(['File saved: ' savefile]);
 
         end
+        
+        % Make difference file, run averaging
+        
+        % already have the second condition, so use it
+        data_timelock   = averaging(data_preprocessed);
+
+        cond            = struct;
+        cond(2)         = data_timelock;
+            
+        % process the first condition
+        load([save_path subj_data '-preprocessed-'  char(aveTimes(aveTime)) '-' num2str(aveParams{aveParam}{1}) '-' num2str(aveParams{aveParam}{2}(1)) '.mat']);
+        data_timelock   = averaging(data_preprocessed);
+        cond(1)         = data_timelock;
+        
+        % difference the conditions, plot figures
+        cond(3) = cond(1);
+        cond(3).avg = cond(1).avg - cond(2).avg;
+        
+        plot_time_freq(cond(3));
+
     end
 end
 
+% Save a given figure to matlab-files/figures with a user-defined title and
+% filename
 function save_figure(h)
 beep;
 save_figure = input( 'Save figure? (y/N) ', 's' );
@@ -306,3 +304,37 @@ if strcmp( save_figure, 'y' )
     save_name = input( 'File name: ', 's' );
     saveas( h, ['figures/' save_name], 'pdf' );
 end
+
+% Plot separate time and frequency plots, ask whether they should be saved
+function plot_time_freq(data)
+% Plot averaged general activity
+cfg                 = [];
+cfg.layout          = 'neuromag306all.lay';
+cfg.showlabels      = 'no';
+figure();
+ft_multiplotER(cfg, data);
+save_figure(gcf);
+
+% plot frequency
+cfg             = [];
+cfg.method      = 'mtmfft';
+cfg.output      = 'pow';
+cfg.calcdof     = 'yes';
+cfg.taper       = 'hanning';
+cfg.foilim      = [1 40];
+data_freq       = ft_freqanalysis( cfg, data );
+
+cfg             = [];
+cfg.layout      = 'neuromag306all.lay';
+cfg.showlabels  = 'no';
+cfg.ylim        = [0 3e-27];
+figure();
+ft_multiplotER( cfg, data_freq );
+save_figure(gcf);
+
+% perform averaging on a preprocessed dataset
+function data_timelock = averaging(data)
+cfg.channel     = ft_channelselection( 'M*', cfg.hdr.label );
+cfg.keeptrials  = 'yes';
+cfg.covariance  = 'yes';
+data_timelock   = ft_timelockanalysis(cfg, data);
