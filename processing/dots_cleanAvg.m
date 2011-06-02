@@ -1,4 +1,4 @@
-function dots_cleaning(subj, sess, run, dataset, aveTimes, aveParams, analysisTimes)
+function dots_cleanAvg(subj, sess, run, dataset, aveTimes, aveParams, analysisTimes)
 %
 % function dots_ft_cleaning(subj, sess, run, dataset)
 %
