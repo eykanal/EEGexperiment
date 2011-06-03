@@ -19,7 +19,6 @@ function dots_cleanAvg(subj, sess, run, dataset, aveTimes, aveParams, analysisTi
 % Eliezer Kanal, 5/2011
 
 dbstop if error
-dbstop in dots_cleaning.m at averaging
 ft_defaults;
 
 % re-add the directories to the path to ensure that all subjects are
@@ -31,12 +30,19 @@ subj_data       = sprintf('subject%i_ses%i_%i', subj, sess, run);
 save_path       = sprintf('/Volumes/ShadyBackBowls/meg_data/Dots/%i/matlab-files/', subj);
 meg_full_file   = sprintf('/Volumes/ShadyBackBowls/meg_data/Dots/%i/%s', subj, dataset);
 
+% for use in subfunctions
+global g_save_path g_subj g_sess g_run;
+g_save_path = save_path;
+g_subj      = subj;
+g_sess      = sess;
+g_run       = run;
+
 %
 % Setup configuration structure
 %
 
 if ~exist(meg_full_file, 'file')
-    error('fif file not found. Please verify %s exists and that trigger_fix has been run.', meg_full_file);
+    error('fif file not found. Please verify %s exists and that trigger_fix has been run.', meg_full_file); %#ok<SPERR>
 end
 
 if ~exist([subj_data '.mat'], 'file')
@@ -83,22 +89,30 @@ if ~exist( 'Right_RT', 'var' )
     Right_RT = [];
 end
 
-% Define averaging parameters, if not provided at runtime
-if isempty('aveTimes')
-    aveTimes    = {'stim', 'resp'};
-end
-if isempty('aveParams')
-    aveParams   = {{'coh', unique(cohVec)}, {'respdir','RL'}};  % currently not analyzing sigdet or arrow
-end
+% Define input parameters if not provided at runtime. Down here instead of
+% at top due to use of `cohVec`.
+SetDefaultValue(5, 'aveTimes',      {'stim', 'resp'});
+SetDefaultValue(6, 'aveParams',     {{'coh', unique(cohVec)}, {'respdir','RL'}});
+SetDefaultValue(7, 'analysisTimes', [1000 1000]);
 
-if isempty('analysisTimes')
-    analysisTimes = [1000 1000];
+for n = 1:length(aveParams)
+    if iscellstr(aveParams{n}(2)) && strcmp(aveParams{n}(2), 'all')
+        switch char(aveParams{n}(1))
+            case 'coh'
+                aveParams{n}(2) = {unique(cohVec)};
+            case 'respdir'
+                aveParams{n}(2) = {unique(RDir)};
+        end
+    end
 end
 
 % preprocess for each averaging parameter, both at stimulus and response
 for aveParam = 1:length(aveParams)
     for aveTime = 1:length(aveTimes)
         for aveParamValue = 1:length(aveParams{aveParam}{2})
+            
+            % define base plot name for future use
+            base_plot_name = cell2mat([char(aveParams{aveParam}{1}) ' (' num2str(aveParams{aveParam}{2}(aveParamValue)) ') @ ' aveTimes(aveTime)]);
 
             cfg = cfg_base;                                 % ## CFG RESET! ##
             cfg.trialfun        = 'defineDotsTrials';
@@ -151,169 +165,201 @@ for aveParam = 1:length(aveParams)
                 end
             end
             
+            % display plots
+            plot_time_freq(data_preprocessed, base_plot_name);
+
             % The while loop allows denoising, viewing of the TFR, and then
             % subsequent re-denoising, if necessary
             tfr_denoise_cont = 'y';
             while strcmp( tfr_denoise_cont, 'y' )
                 
-                reject_vis_cont = 'y';
-                while strcmp( reject_vis_cont, 'y' )
-                    
-                    % display plots
-                    plot_time_freq(data_preprocessed);
-                    
-                    % Examine data for noise
-                    cfg.channel         = 'M*';  %remove STI channels
-                    cfg.megscale        = 1;
-                    cfg.eogscale        = 5e-8;
+                component_analysis = input( 'Do you want to run ft_componentanalysis? (y/N) ', 's' );
 
-                    cfg.method          = 'channel';
-                    data_preprocessed   = ft_rejectvisual(cfg, data_preprocessed);
-                    cfg.method          = 'trial';
-                    data_preprocessed   = ft_rejectvisual(cfg, data_preprocessed);
+                % component analysis
+                if strcmp( component_analysis, 'y' )
 
-                    component_analysis = input( 'Do you want to run ft_componentanalysis? (y/N) ', 's' );
-                    
-                    % component analysis
-                    if strcmp( component_analysis, 'y' )
-                        
-                        % find gradiometer components
-                        run_grad_again = 1;
-                        while run_grad_again
-                            cfg                 = [];
-                            cfg.method          = 'fastica';
-                            cfg.channel         = {'M*2', 'M*3'};
-                            cfg.fastica.numOfIC = 40;
-                            cfg.fastica.lastEig = 50;
-                            cfg.fastica.verbose = 'off';
-                            data_components = ft_componentanalysis(cfg, data_preprocessed);
-                            
-                            cfg                 = [];
-                            cfg.layout          = 'neuromag306planar.lay';
-                            ft_componentbrowser(cfg, data_components);
-                            reject              = input( 'Enter components to reject (leave blank for none): ');
-                            
-                            if ~isempty( reject )
-                                cfg             = [];
-                                cfg.component   = reject;
-                                data_preprocessed = ft_rejectcomponent(cfg, data_components, data_preprocessed);
-                            else
-                                % cancel out of "run grad again" loop
-                                run_grad_again = 0;
-                            end
-                        end
-                        
-                        % find magnetometer components
-                        run_mag_again = 1;
-                        while run_mag_again
-                            cfg                 = [];
-                            cfg.method          = 'fastica';
-                            cfg.channel         = {'M*1'};
-                            cfg.fastica.numOfIC = 50;
-                            cfg.fastica.lastEig = 50;
-                            cfg.fastica.verbose = 'off';
-                            data_components = ft_componentanalysis(cfg, data_preprocessed);
-                            
-                            cfg                 = [];
-                            cfg.layout          = 'neuromag306mag.lay';
-                            ft_componentbrowser(cfg, data_components);
-                            reject              = input( 'Enter components to reject (leave blank for none): ');
-                            
-                            if ~isempty( reject )
-                                cfg             = [];
-                                cfg.component   = reject;
-                                data_preprocessed = ft_rejectcomponent(cfg, data_components, data_preprocessed);
-                            else
-                                % cancel out of "run grad again" loop
-                                run_mag_again = 0;
-                            end
+                    % find gradiometer components
+                    run_grad_again = 1;
+                    while run_grad_again
+                        cfg                 = [];
+                        cfg.method          = 'fastica';
+                        cfg.channel         = 'MEGGRAD';
+                        cfg.fastica.numOfIC = 40;
+                        cfg.fastica.lastEig = 50;
+                        cfg.fastica.verbose = 'off';
+                        data_components = ft_componentanalysis(cfg, data_preprocessed);
+
+                        cfg                 = [];
+                        cfg.layout          = 'neuromag306planar.lay';
+                        ft_componentbrowser(cfg, data_components);
+                        reject              = input( 'Enter components to reject (leave blank for none): ');
+
+                        if ~isempty( reject )
+                            cfg             = [];
+                            cfg.component   = reject;
+                            data_preprocessed = ft_rejectcomponent(cfg, data_components, data_preprocessed);
+                        else
+                            % cancel out of "run grad again" loop
+                            run_grad_again = 0;
                         end
                     end
-                    
-                    beep;
-                    reject_vis_cont = input( 'Do you want to re-examine the trials/channels? (y/N) ', 's' );
+
+                    % find magnetometer components
+                    run_mag_again = 1;
+                    while run_mag_again
+                        cfg                 = [];
+                        cfg.method          = 'fastica';
+                        cfg.channel         = 'MEGMAG';
+                        cfg.fastica.numOfIC = 50;
+                        cfg.fastica.lastEig = 50;
+                        cfg.fastica.verbose = 'off';
+                        data_components = ft_componentanalysis(cfg, data_preprocessed);
+
+                        cfg                 = [];
+                        cfg.layout          = 'neuromag306mag.lay';
+                        ft_componentbrowser(cfg, data_components);
+                        reject              = input( 'Enter components to reject (leave blank for none): ');
+
+                        if ~isempty( reject )
+                            cfg             = [];
+                            cfg.component   = reject;
+                            data_preprocessed = ft_rejectcomponent(cfg, data_components, data_preprocessed);
+                        else
+                            % cancel out of "run grad again" loop
+                            run_mag_again = 0;
+                        end
+                    end
                 end
-                
+
+                % Examine data for noise
+                cfg.channel         = 'M*';  %remove STI channels
+                cfg.megscale        = 1;
+                cfg.eogscale        = 5e-8;
+                cfg.alim            = 2e-12;
+
+                cfg.method          = 'channel';
+                data_preprocessed   = ft_rejectvisual(cfg, data_preprocessed);
+                cfg.method          = 'trial';
+                data_preprocessed   = ft_rejectvisual(cfg, data_preprocessed);
+                cfg.method          = 'summary';
+                cfg.metric          = 'maxabs';
+                data_preprocessed   = ft_rejectvisual(cfg, data_preprocessed);
+
+                save_preprocessed = input('Save preprocessed data? (Y/n) ', 's');
+                if ~strcmp( save_preprocessed, 'n')
+                    % save preprocessed file
+                    disp('Saving preprocessed file...');
+                    savefile = [subj_data '-preprocessed-'  char(aveTimes(aveTime)) '-' num2str(aveParams{aveParam}{1}) '-' num2str(aveParams{aveParam}{2}(aveParamValue)) '.mat'];
+                    save([save_path savefile], 'data_preprocessed');
+                    disp(['File saved: ' savefile]);
+                end
+
+                break_keyboard = input('Enable keyboard? (y/N) ', 's');
+                if strcmp( break_keyboard, 'y')
+                    keyboard;
+                end
+
                 view_freq_plots = input( 'Do you want to see time/frequency plots? (y/N) ', 's' );
-                
                 if strcmp( view_freq_plots, 'y' )
-                    
                     % plot averaged timeseries
-                    plot_time_freq(data_preprocessed);
+                    plot_time_freq(data_preprocessed, base_plot_name);
                     
                     % plot TFR
                     cfg             = [];
-                    cfg.channel     = 'M*';
+                    cfg.channel     = {'M*'};
                     cfg.output      = 'pow';
                     cfg.method      = 'mtmconvol';
                     cfg.taper       = 'hanning';
                     cfg.foi         = 1:30;
                     cfg.t_ftimwin   = 2./cfg.foi;
-                    cfg.toi         = -analysisTimes(1):0.05:analysisTimes(2);
+                    cfg.toi         = -analysisTimes(1)/1000:0.05:analysisTimes(2)/1000;
                     data_freq_varWind = ft_freqanalysis(cfg, data_preprocessed);
 
                     cfg             = [];
                     cfg.showlabels  = 'no';	
                     cfg.layout      = 'neuromag306all.lay';
+                    cfg.zlim        = 'maxabs';
                     figure();
                     ft_multiplotTFR(cfg, data_freq_varWind);
-                    save_figure(gcf);
-                    
-                    tfr_denoise_cont = input( 'Do you want to re-examine the trials/channels? (y/N) ', 's' );
-                else
-                    tfr_denoise_cont = 'n';
+                    save_figure(gcf, 'time-frequency', base_plot_name);
+
+                    break_keyboard = input('Enable keyboard? (y/N) ', 's');
+                    if strcmp( break_keyboard, 'y')
+                        keyboard;
+                    end
                 end
+
+                tfr_denoise_cont = input( 'Do you want to re-examine the trials/channels? (y/N) ', 's' );
             end
             
-            savefile = [subj_data '-preprocessed-'  char(aveTimes(aveTime)) '-' num2str(aveParams{aveParam}{1}) '-' num2str(aveParams{aveParam}{2}(aveParamValue)) '.mat'];
-            save([save_path savefile], 'data_preprocessed');
+            % make averaged file
+            disp('Averaging...');
+            cfg.channel     = {'M*'};
+            cfg.keeptrials  = 'yes';
+            cfg.covariance  = 'yes';
+            data_timelock   = ft_timelockanalysis(cfg, data_preprocessed); %#ok<NASGU>
+            savefile = [subj_data '-timelock-'  char(aveTimes(aveTime)) '-' num2str(aveParams{aveParam}{1}) '-' num2str(aveParams{aveParam}{2}(aveParamValue)) '.mat'];
+            save([save_path savefile], 'data_timelock');
             disp(['File saved: ' savefile]);
 
         end
-        
-        % Make difference file, run averaging
-        
-        % already have the second condition, so use it
-        data_timelock   = averaging(data_preprocessed);
-
-        cond            = struct;
-        cond(2)         = data_timelock;
-            
-        % process the first condition
-        load([save_path subj_data '-preprocessed-'  char(aveTimes(aveTime)) '-' num2str(aveParams{aveParam}{1}) '-' num2str(aveParams{aveParam}{2}(1)) '.mat']);
-        data_timelock   = averaging(data_preprocessed);
-        cond(1)         = data_timelock;
-        
-        % difference the conditions, plot figures
-        cond(3) = cond(1);
-        cond(3).avg = cond(1).avg - cond(2).avg;
-        
-        plot_time_freq(cond(3));
-
     end
 end
 
 % Save a given figure to matlab-files/figures with a user-defined title and
 % filename
-function save_figure(h)
+function save_figure(h, plotType, plotVar)
+% get base directory
+global g_save_path g_subj g_sess g_run;
+
+SetDefaultValue(4, 'extra', '');
+
+title( sprintf( 'Subject %i, session %i, run %i, %s, %s', g_subj, g_sess, g_run, plotType, plotVar ) );
+
 beep;
 save_figure = input( 'Save figure? (y/N) ', 's' );
+
 if strcmp( save_figure, 'y' )
-    fig_title = input( 'Figure title: ', 's' );
-    title( fig_title );
-    save_name = input( 'File name: ', 's' );
-    saveas( h, ['figures/' save_name], 'pdf' );
+    if ~exist( [g_save_path 'figures'], 'dir' )
+        mkdir( g_save_path, 'figures' );
+    end
+    
+    % get figure name
+    fprintf( 'Current title: Subject %i, session %i, run %i, %s, %s\n', g_subj, g_sess, g_run, plotType, plotVar );
+    extra = input( 'Append comment to title (leave blank if OK as is): ', 's' );
+    if strlen(extra) > 0
+        extra = [', ' extra];
+    end
+
+    title( sprintf( 'Subject %i, session %i, run %i, %s, %s%s', g_subj, g_sess, g_run, plotType, plotVar, extra ) );
+
+    % get file name, ensure file doesn't already exist
+    save_ok = 'n';
+    while ~strcmp(save_ok, 'y')
+        save_name = input( 'File name: ', 's' );
+        if exist( [g_save_path 'figures/' save_name], 'file' )
+            save_ok = input( 'File exists! Overwrite? (y/N) ', 's' );
+
+            if ~strcmp( save_ok, 'y' )
+                save_ok = 'n';
+            end
+        else
+            save_ok = 'y';
+        end
+    end
+    
+    saveas( h, [g_save_path 'figures/' save_name], 'pdf' );
 end
 
 % Plot separate time and frequency plots, ask whether they should be saved
-function plot_time_freq(data)
+function plot_time_freq(data, plotVar)
 % Plot averaged general activity
 cfg                 = [];
 cfg.layout          = 'neuromag306all.lay';
 cfg.showlabels      = 'no';
 figure();
 ft_multiplotER(cfg, data);
-save_figure(gcf);
+save_figure(gcf, 'time series', plotVar);
 
 % plot frequency
 cfg             = [];
@@ -330,11 +376,11 @@ cfg.showlabels  = 'no';
 cfg.ylim        = [0 3e-27];
 figure();
 ft_multiplotER( cfg, data_freq );
-save_figure(gcf);
+save_figure(gcf, 'frequency plot', plotVar);
 
 % perform averaging on a preprocessed dataset
 function data_timelock = averaging(data)
-cfg.channel     = ft_channelselection( 'M*', cfg.hdr.label );
+cfg.channel     = {'M*'};
 cfg.keeptrials  = 'yes';
 cfg.covariance  = 'yes';
 data_timelock   = ft_timelockanalysis(cfg, data);

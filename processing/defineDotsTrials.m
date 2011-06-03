@@ -138,9 +138,7 @@ switch cfg.dots.aveParam
         trl = zeros( len, 4 );
         
         trl(:,1) = times( goodResponses )' - preTrig;
-        % The 'max' function ensures we'll have good data for at least 300
-        % ms after the longest trial.
-        trl(:,2) = times( goodResponses )' + postTrig + max(data.times.resp - data.times.stim);
+        trl(:,2) = times( goodResponses )' + postTrig;
         trl(:,3)  = -preTrig;
         trl(:,4) = 1;
 
