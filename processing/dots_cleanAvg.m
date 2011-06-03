@@ -31,11 +31,12 @@ save_path       = sprintf('/Volumes/ShadyBackBowls/meg_data/Dots/%i/matlab-files
 meg_full_file   = sprintf('/Volumes/ShadyBackBowls/meg_data/Dots/%i/%s', subj, dataset);
 
 % for use in subfunctions
-global g_save_path g_subj g_sess g_run;
+global g_save_path g_subj g_sess g_run g_analysisTimes;
 g_save_path = save_path;
 g_subj      = subj;
 g_sess      = sess;
 g_run       = run;
+g_analysisTimes = analysisTimes;
 
 %
 % Setup configuration structure
@@ -166,7 +167,11 @@ for aveParam = 1:length(aveParams)
             end
             
             % display plots
-            plot_time_freq(data_preprocessed, base_plot_name);
+            view_freq_plots = input( 'Do you want to see time/frequency plots? (y/N) ', 's' );
+            if strcmp( view_freq_plots, 'y' )
+                plot_time_freq(data_preprocessed, base_plot_name);
+                plot_tfr(data_preprocessed, base_plot_name);
+            end
 
             % The while loop allows denoising, viewing of the TFR, and then
             % subsequent re-denoising, if necessary
@@ -232,7 +237,7 @@ for aveParam = 1:length(aveParams)
                 end
 
                 % Examine data for noise
-                cfg.channel         = 'M*';  %remove STI channels
+                cfg.channel         = 'M*';  % remove STI channels
                 cfg.megscale        = 1;
                 cfg.eogscale        = 5e-8;
                 cfg.alim            = 2e-12;
@@ -254,39 +259,15 @@ for aveParam = 1:length(aveParams)
                     disp(['File saved: ' savefile]);
                 end
 
+                view_freq_plots = input( 'Do you want to see time/frequency plots? (y/N) ', 's' );
+                if strcmp( view_freq_plots, 'y' )
+                    plot_time_freq(data_preprocessed, base_plot_name);
+                    plot_tfr(data_preprocessed, base_plot_name);
+                end
+
                 break_keyboard = input('Enable keyboard? (y/N) ', 's');
                 if strcmp( break_keyboard, 'y')
                     keyboard;
-                end
-
-                view_freq_plots = input( 'Do you want to see time/frequency plots? (y/N) ', 's' );
-                if strcmp( view_freq_plots, 'y' )
-                    % plot averaged timeseries
-                    plot_time_freq(data_preprocessed, base_plot_name);
-                    
-                    % plot TFR
-                    cfg             = [];
-                    cfg.channel     = {'M*'};
-                    cfg.output      = 'pow';
-                    cfg.method      = 'mtmconvol';
-                    cfg.taper       = 'hanning';
-                    cfg.foi         = 1:30;
-                    cfg.t_ftimwin   = 2./cfg.foi;
-                    cfg.toi         = -analysisTimes(1)/1000:0.05:analysisTimes(2)/1000;
-                    data_freq_varWind = ft_freqanalysis(cfg, data_preprocessed);
-
-                    cfg             = [];
-                    cfg.showlabels  = 'no';	
-                    cfg.layout      = 'neuromag306all.lay';
-                    cfg.zlim        = 'maxabs';
-                    figure();
-                    ft_multiplotTFR(cfg, data_freq_varWind);
-                    save_figure(gcf, 'time-frequency', base_plot_name);
-
-                    break_keyboard = input('Enable keyboard? (y/N) ', 's');
-                    if strcmp( break_keyboard, 'y')
-                        keyboard;
-                    end
                 end
 
                 tfr_denoise_cont = input( 'Do you want to re-examine the trials/channels? (y/N) ', 's' );
@@ -378,9 +359,34 @@ figure();
 ft_multiplotER( cfg, data_freq );
 save_figure(gcf, 'frequency plot', plotVar);
 
-% perform averaging on a preprocessed dataset
-function data_timelock = averaging(data)
+% plot TFR
+function plot_tfr(data, plotVar)
+global g_analysisTimes;
+
+cfg             = [];
 cfg.channel     = {'M*'};
-cfg.keeptrials  = 'yes';
-cfg.covariance  = 'yes';
-data_timelock   = ft_timelockanalysis(cfg, data);
+cfg.output      = 'pow';
+cfg.method      = 'mtmconvol';
+cfg.taper       = 'hanning';
+cfg.foi         = 1:30;
+cfg.t_ftimwin   = 2./cfg.foi;
+cfg.toi         = -g_analysisTimes(1)/1000:0.05:g_analysisTimes(2)/1000;
+data_freq_varWind = ft_freqanalysis(cfg, data);
+
+cfg             = [];
+cfg.showlabels  = 'no';	
+cfg.layout      = 'neuromag306all.lay';
+cfg.zlim        = 'maxabs';
+figure();
+ft_multiplotTFR(cfg, data_freq_varWind);
+save_figure(gcf, 'time-frequency', plotVar);
+
+tfr_zaxis_size = cfg.zlim;
+while ~isempty(tfr_zaxis_size)
+    tfr_zaxis_size = input( 'Input alternate zlim (leave blank to continue): ');
+    if ismatrix(tfr_zaxis_size)
+        cfg.zlim = tfr_zaxis_size;
+        ft_multiplotTFR(cfg, data_freq_varWind);
+        save_figure(gcf, 'time-frequency', plotVar);
+    end
+end
