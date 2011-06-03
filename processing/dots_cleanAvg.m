@@ -178,60 +178,38 @@ for aveParam = 1:length(aveParams)
             tfr_denoise_cont = 'y';
             while strcmp( tfr_denoise_cont, 'y' )
                 
+                % component analysis
                 component_analysis = input( 'Do you want to run ft_componentanalysis? (y/N) ', 's' );
 
-                % component analysis
                 if strcmp( component_analysis, 'y' )
+                    % find magnetometer, gradiometer components
+                    channels = {'MEGGRAD', 'MEGMAG'};
+                    for chan = 1:length(channels)
+                        
+                        run_again = 1;
+                        while run_again
+                            cfg                 = [];
+                            cfg.method          = 'fastica';
+                            cfg.channel         = channels(chan);
+                            cfg.fastica.numOfIC = 40;
+                            cfg.fastica.lastEig = 50;
+                            cfg.fastica.verbose = 'off';
+                            data_components = ft_componentanalysis(cfg, data_preprocessed);
 
-                    % find gradiometer components
-                    run_grad_again = 1;
-                    while run_grad_again
-                        cfg                 = [];
-                        cfg.method          = 'fastica';
-                        cfg.channel         = 'MEGGRAD';
-                        cfg.fastica.numOfIC = 40;
-                        cfg.fastica.lastEig = 50;
-                        cfg.fastica.verbose = 'off';
-                        data_components = ft_componentanalysis(cfg, data_preprocessed);
+                            cfg                 = [];
+                            cfg.layout          = 'neuromag306planar.lay';
+                            cfg.viewmode        = 'component';
+                            ft_databrowser(cfg, data_components);
+                            reject              = input( 'Enter components to reject (leave blank for none): ');
 
-                        cfg                 = [];
-                        cfg.layout          = 'neuromag306planar.lay';
-                        ft_componentbrowser(cfg, data_components);
-                        reject              = input( 'Enter components to reject (leave blank for none): ');
-
-                        if ~isempty( reject )
-                            cfg             = [];
-                            cfg.component   = reject;
-                            data_preprocessed = ft_rejectcomponent(cfg, data_components, data_preprocessed);
-                        else
-                            % cancel out of "run grad again" loop
-                            run_grad_again = 0;
-                        end
-                    end
-
-                    % find magnetometer components
-                    run_mag_again = 1;
-                    while run_mag_again
-                        cfg                 = [];
-                        cfg.method          = 'fastica';
-                        cfg.channel         = 'MEGMAG';
-                        cfg.fastica.numOfIC = 50;
-                        cfg.fastica.lastEig = 50;
-                        cfg.fastica.verbose = 'off';
-                        data_components = ft_componentanalysis(cfg, data_preprocessed);
-
-                        cfg                 = [];
-                        cfg.layout          = 'neuromag306mag.lay';
-                        ft_componentbrowser(cfg, data_components);
-                        reject              = input( 'Enter components to reject (leave blank for none): ');
-
-                        if ~isempty( reject )
-                            cfg             = [];
-                            cfg.component   = reject;
-                            data_preprocessed = ft_rejectcomponent(cfg, data_components, data_preprocessed);
-                        else
-                            % cancel out of "run grad again" loop
-                            run_mag_again = 0;
+                            if ~isempty( reject )
+                                cfg             = [];
+                                cfg.component   = reject;
+                                data_preprocessed = ft_rejectcomponent(cfg, data_components, data_preprocessed);
+                            else
+                                % cancel out of "run_again" loop
+                                run_again = 0;
+                            end
                         end
                     end
                 end
