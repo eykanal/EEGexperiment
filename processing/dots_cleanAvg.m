@@ -113,13 +113,15 @@ for aveParam = 1:length(aveParams)
         for aveParamValue = 1:length(aveParams{aveParam}{2})
             
             % define base plot name for future use
-            base_plot_name = cell2mat([char(aveParams{aveParam}{1}) ' (' num2str(aveParams{aveParam}{2}(aveParamValue)) ') @ ' aveTimes(aveTime)]);
+            curr_param          = char(aveParams{aveParam}{1});
+            curr_paramValue     = num2str(aveParams{aveParam}{2}(aveParamValue));
+            curr_time           = char(aveTimes(aveTime));
+            
+            base_plot_name      = [curr_param ' (' curr_paramValue ') @ ' curr_time];
 
             cfg = cfg_base;                                 % ## CFG RESET! ##
             cfg.trialfun        = 'defineDotsTrials';
-            
             cfg.dots.data       = data;
-            
             cfg.dots.coh        = cohVec;
             cfg.dots.cue        = cueVec;
             cfg.dots.ER         = ER;
@@ -169,8 +171,12 @@ for aveParam = 1:length(aveParams)
             % display plots
             view_freq_plots = input( 'Do you want to see time/frequency plots? (y/N) ', 's' );
             if strcmp( view_freq_plots, 'y' )
-                plot_time_freq(data_preprocessed, base_plot_name);
-                plot_tfr(data_preprocessed, base_plot_name);
+                plot_time(data_preprocessed);
+                save_figure( gcf, 'time series', base_plot_name, 'no processing', [curr_time '-' curr_param curr_paramValue '-noProc-time']);
+                plot_freq(data_preprocessed);
+                save_figure( gcf, 'time series', base_plot_name, 'no processing', [curr_time '-' curr_param curr_paramValue '-noProc-freq']);
+                plot_tf(data_preprocessed);
+                save_figure( gcf, 'time series', base_plot_name, 'no processing', [curr_time '-' curr_param curr_paramValue '-noProc-tf']);
             end
 
             % The while loop allows denoising, viewing of the TFR, and then
@@ -184,8 +190,9 @@ for aveParam = 1:length(aveParams)
                 if strcmp( component_analysis, 'y' )
                     % find magnetometer, gradiometer components
                     channels = {'MEGGRAD', 'MEGMAG'};
+                    layouts  = {'neuromag306planar.lay', 'neuromag306mag.lay'};
+
                     for chan = 1:length(channels)
-                        
                         run_again = 1;
                         while run_again
                             cfg                 = [];
@@ -197,9 +204,8 @@ for aveParam = 1:length(aveParams)
                             data_components = ft_componentanalysis(cfg, data_preprocessed);
 
                             cfg                 = [];
-                            cfg.layout          = 'neuromag306planar.lay';
-                            cfg.viewmode        = 'component';
-                            ft_databrowser(cfg, data_components);
+                            cfg.layout          = char(layouts(chan));
+                            ft_componentbrowser(cfg, data_components);
                             reject              = input( 'Enter components to reject (leave blank for none): ');
 
                             if ~isempty( reject )
@@ -220,27 +226,32 @@ for aveParam = 1:length(aveParams)
                 cfg.eogscale        = 5e-8;
                 cfg.alim            = 2e-12;
 
-                cfg.method          = 'channel';
-                data_preprocessed   = ft_rejectvisual(cfg, data_preprocessed);
                 cfg.method          = 'trial';
+                data_preprocessed   = ft_rejectvisual(cfg, data_preprocessed);
+                cfg.method          = 'channel';
                 data_preprocessed   = ft_rejectvisual(cfg, data_preprocessed);
                 cfg.method          = 'summary';
                 cfg.metric          = 'maxabs';
+                cfg.viewmode        = 'toggle';
                 data_preprocessed   = ft_rejectvisual(cfg, data_preprocessed);
 
                 save_preprocessed = input('Save preprocessed data? (Y/n) ', 's');
                 if ~strcmp( save_preprocessed, 'n')
                     % save preprocessed file
                     disp('Saving preprocessed file...');
-                    savefile = [subj_data '-preprocessed-'  char(aveTimes(aveTime)) '-' num2str(aveParams{aveParam}{1}) '-' num2str(aveParams{aveParam}{2}(aveParamValue)) '.mat'];
+                    savefile = [num2str(subj) '-' num2str(sess) '-' num2str(run) '-preprocessed-'  char(aveTimes(aveTime)) '-' num2str(aveParams{aveParam}{1}) '-' num2str(aveParams{aveParam}{2}(aveParamValue)) '.mat'];
                     save([save_path savefile], 'data_preprocessed');
                     disp(['File saved: ' savefile]);
                 end
 
                 view_freq_plots = input( 'Do you want to see time/frequency plots? (y/N) ', 's' );
                 if strcmp( view_freq_plots, 'y' )
-                    plot_time_freq(data_preprocessed, base_plot_name);
-                    plot_tfr(data_preprocessed, base_plot_name);
+                plot_time(data_preprocessed);
+                save_figure( gcf, 'time series', base_plot_name, 'ICA & reject bad trials', [curr_time '-' curr_param curr_paramValue '-proc-time']);
+                plot_freq(data_preprocessed);
+                save_figure( gcf, 'time series', base_plot_name, 'ICA & reject bad trials', [curr_time '-' curr_param curr_paramValue '-proc-freq']);
+                plot_tf(data_preprocessed);
+                save_figure( gcf, 'time series', base_plot_name, 'ICA & reject bad trials', [curr_time '-' curr_param curr_paramValue '-proc-tf']);
                 end
 
                 break_keyboard = input('Enable keyboard? (y/N) ', 's');
@@ -267,35 +278,37 @@ end
 
 % Save a given figure to matlab-files/figures with a user-defined title and
 % filename
-function save_figure(h, plotType, plotVar)
+function save_figure(h, plotType, plotVar, plotExtra, plotSaveName)
 % get base directory
 global g_save_path g_subj g_sess g_run;
 
-SetDefaultValue(4, 'extra', '');
-
-title( sprintf( 'Subject %i, session %i, run %i, %s, %s', g_subj, g_sess, g_run, plotType, plotVar ) );
+title( sprintf( 'Subject %i, session %i, run %i, %s, %s, %s\n', g_subj, g_sess, g_run, plotType, plotVar, plotExtra ) );
 
 beep;
-save_figure = input( 'Save figure? (y/N) ', 's' );
+save_figure = input( 'Save figure? (Y/n) ', 's' );
 
-if strcmp( save_figure, 'y' )
+if ~strcmp( save_figure, 'n' )
     if ~exist( [g_save_path 'figures'], 'dir' )
         mkdir( g_save_path, 'figures' );
     end
     
-    % get figure name
-    fprintf( 'Current title: Subject %i, session %i, run %i, %s, %s\n', g_subj, g_sess, g_run, plotType, plotVar );
-    extra = input( 'Append comment to title (leave blank if OK as is): ', 's' );
+    % set figure name
+    extra = input( 'Modify comment (leave blank if OK as is): ', 's' );
     if strlen(extra) > 0
-        extra = [', ' extra];
+        title( sprintf( 'Subject %i, session %i, run %i, %s, %s, %s\n', g_subj, g_sess, g_run, plotType, plotVar, extra ) );
     end
-
-    title( sprintf( 'Subject %i, session %i, run %i, %s, %s%s', g_subj, g_sess, g_run, plotType, plotVar, extra ) );
 
     % get file name, ensure file doesn't already exist
     save_ok = 'n';
     while ~strcmp(save_ok, 'y')
-        save_name = input( 'File name: ', 's' );
+        save_name = sprintf( '%i-%i-%i-%s.pdf', g_subj, g_sess, g_run, plotSaveName );
+        fprintf('Default save name: %s\n', save_name);
+        
+        new_save_name = input( 'Input new file name (leave blank if OK as is): ', 's' );
+        if strlen(new_save_name) > 0
+            save_name = new_save_name;
+        end
+        
         if exist( [g_save_path 'figures/' save_name], 'file' )
             save_ok = input( 'File exists! Overwrite? (y/N) ', 's' );
 
@@ -310,17 +323,15 @@ if strcmp( save_figure, 'y' )
     saveas( h, [g_save_path 'figures/' save_name], 'pdf' );
 end
 
-% Plot separate time and frequency plots, ask whether they should be saved
-function plot_time_freq(data, plotVar)
 % Plot averaged general activity
+function plot_time(data)
 cfg                 = [];
 cfg.layout          = 'neuromag306all.lay';
 cfg.showlabels      = 'no';
 figure();
 ft_multiplotER(cfg, data);
-save_figure(gcf, 'time series', plotVar);
 
-% plot frequency
+function plot_freq(data)
 cfg             = [];
 cfg.method      = 'mtmfft';
 cfg.output      = 'pow';
@@ -335,10 +346,8 @@ cfg.showlabels  = 'no';
 cfg.ylim        = [0 3e-27];
 figure();
 ft_multiplotER( cfg, data_freq );
-save_figure(gcf, 'frequency plot', plotVar);
 
-% plot TFR
-function plot_tfr(data, plotVar)
+function plot_tf(data)
 global g_analysisTimes;
 
 cfg             = [];
@@ -357,14 +366,12 @@ cfg.layout      = 'neuromag306all.lay';
 cfg.zlim        = 'maxabs';
 figure();
 ft_multiplotTFR(cfg, data_freq_varWind);
-save_figure(gcf, 'time-frequency', plotVar);
 
 tfr_zaxis_size = cfg.zlim;
 while ~isempty(tfr_zaxis_size)
     tfr_zaxis_size = input( 'Input alternate zlim (leave blank to continue): ');
-    if ismatrix(tfr_zaxis_size)
+    if ismatrix(tfr_zaxis_size) && ~isempty(tfr_zaxis_size)
         cfg.zlim = tfr_zaxis_size;
         ft_multiplotTFR(cfg, data_freq_varWind);
-        save_figure(gcf, 'time-frequency', plotVar);
     end
 end

@@ -1,7 +1,7 @@
 function trl = defineDotsTrials(cfg)
 % requires:
 %   cfg.dots.aveParam   1xn cell, each cell containing a 1x2 cell. First cell
-%                       is one of {'coh', 'respdir', 'arrow', 'sigdet'},
+%                       is one of {'coh', 'respdir', 'arrow', 'sigdet', 'baseline'},
 %                       second cell contains the values to be iterated over
 %                       (i.e., coherence values, response directions, arrow
 %                       directions, etc.)
