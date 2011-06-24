@@ -117,8 +117,6 @@ for aveParam = 1:length(aveParams)
             curr_paramValue     = num2str(aveParams{aveParam}{2}(aveParamValue));
             curr_time           = char(aveTimes(aveTime));
             
-            base_plot_name      = [curr_param ' (' curr_paramValue ') @ ' curr_time];
-
             cfg = cfg_base;                                 % ## CFG RESET! ##
             cfg.trialfun        = 'defineDotsTrials';
             cfg.dots.data       = data;
@@ -168,15 +166,34 @@ for aveParam = 1:length(aveParams)
                 end
             end
             
+            % define some useful strings
+            base_plot_name_ssr  = sprintf( 'Subject %i, session %i, run %i, %i trials', subj, sess, run, length( data_preprocessed.trial ) );
+            base_plot_name_param = sprintf('%s (%s) @ %s', curr_param, curr_paramValue, curr_time );
+            base_file_name      = sprintf( '%i-%i-%i-%s-%s%s', subj, sess, run, curr_time, curr_param, curr_paramValue );
+
             % display plots
             view_freq_plots = input( 'Do you want to see time/frequency plots? (y/N) ', 's' );
             if strcmp( view_freq_plots, 'y' )
-                plot_time(data_preprocessed);
-                save_figure( gcf, 'time series', base_plot_name, 'no processing', [curr_time '-' curr_param curr_paramValue '-noProc-time']);
-                plot_freq(data_preprocessed);
-                save_figure( gcf, 'time series', base_plot_name, 'no processing', [curr_time '-' curr_param curr_paramValue '-noProc-freq']);
-                plot_tf(data_preprocessed);
-                save_figure( gcf, 'time series', base_plot_name, 'no processing', [curr_time '-' curr_param curr_paramValue '-noProc-tf']);
+                % time plot
+                myft_plot_time(data_preprocessed);
+                title       = sprintf( '%s, %s, %s', base_plot_name_ssr, 'time series', base_plot_name_param );
+                my_set_title(gcf, title, 'no processing');
+                save_file    = sprintf( '%s-%s.pdf', base_file_name, 'noProc-time' );
+                save_figure( gcf, [save_path 'figures/' save_file] );
+
+                % freq plot
+                myft_plot_freq(data_preprocessed);
+                title       = sprintf( '%s, %s, %s', base_plot_name_ssr, 'frequency plot', base_plot_name_param );
+                my_set_title(gcf, title, 'no processing');
+                save_file    = sprintf( '%s-%s.pdf', base_file_name, 'noProc-freq' );
+                save_figure( gcf, [save_path 'figures/' save_file] );
+
+                % time-freq plot
+                myft_plot_tf(data_preprocessed, analysisTimes);
+                title       = sprintf( '%s, %s, %s', base_plot_name_ssr, 'time-frequency', base_plot_name_param );
+                my_set_title(gcf, title, 'no processing');
+                save_file    = sprintf( '%s-%s.pdf', base_file_name, 'noProc-tf' );
+                save_figure( gcf, [save_path 'figures/' save_file] );
             end
 
             % The while loop allows denoising, viewing of the TFR, and then
@@ -246,12 +263,26 @@ for aveParam = 1:length(aveParams)
 
                 view_freq_plots = input( 'Do you want to see time/frequency plots? (y/N) ', 's' );
                 if strcmp( view_freq_plots, 'y' )
-                plot_time(data_preprocessed);
-                save_figure( gcf, 'time series', base_plot_name, 'ICA & reject bad trials', [curr_time '-' curr_param curr_paramValue '-proc-time']);
-                plot_freq(data_preprocessed);
-                save_figure( gcf, 'time series', base_plot_name, 'ICA & reject bad trials', [curr_time '-' curr_param curr_paramValue '-proc-freq']);
-                plot_tf(data_preprocessed);
-                save_figure( gcf, 'time series', base_plot_name, 'ICA & reject bad trials', [curr_time '-' curr_param curr_paramValue '-proc-tf']);
+                    % time plot
+                    myft_plot_time(data_preprocessed);
+                    title       = sprintf( '%s, %s, %s', base_plot_name_ssr, 'time series', base_plot_name_param );
+                    my_set_title(gcf, title, 'no processing');
+                    save_file    = sprintf( '%s-%s.pdf', base_file_name, 'noProc-time' );
+                    save_figure( gcf, [save_path 'figures/' save_file] );
+
+                    % freq plot
+                    myft_plot_freq(data_preprocessed);
+                    title       = sprintf( '%s, %s, %s', base_plot_name_ssr, 'frequency plot', base_plot_name_param );
+                    my_set_title(gcf, title, 'no processing');
+                    save_file    = sprintf( '%s-%s.pdf', base_file_name, 'noProc-freq' );
+                    save_figure( gcf, [save_path 'figures/' save_file] );
+
+                    % time-freq plot
+                    myft_plot_tf(data_preprocessed, analysisTimes);
+                    title       = sprintf( '%s, %s, %s', base_plot_name_ssr, 'time-frequency', base_plot_name_param );
+                    my_set_title(gcf, title, 'no processing');
+                    save_file    = sprintf( '%s-%s.pdf', base_file_name, 'noProc-tf' );
+                    save_figure( gcf, [save_path 'figures/' save_file] );
                 end
 
                 break_keyboard = input('Enable keyboard? (y/N) ', 's');
@@ -265,7 +296,7 @@ for aveParam = 1:length(aveParams)
             % make averaged file
             disp('Averaging...');
             cfg.channel     = {'M*'};
-            cfg.keeptrials  = 'yes';
+            cfg.keeptrials  = 'no';
             cfg.covariance  = 'yes';
             data_timelock   = ft_timelockanalysis(cfg, data_preprocessed); %#ok<NASGU>
             savefile = [subj_data '-timelock-'  char(aveTimes(aveTime)) '-' num2str(aveParams{aveParam}{1}) '-' num2str(aveParams{aveParam}{2}(aveParamValue)) '.mat'];
@@ -321,57 +352,4 @@ if ~strcmp( save_figure, 'n' )
     end
     
     saveas( h, [g_save_path 'figures/' save_name], 'pdf' );
-end
-
-% Plot averaged general activity
-function plot_time(data)
-cfg                 = [];
-cfg.layout          = 'neuromag306all.lay';
-cfg.showlabels      = 'no';
-figure();
-ft_multiplotER(cfg, data);
-
-function plot_freq(data)
-cfg             = [];
-cfg.method      = 'mtmfft';
-cfg.output      = 'pow';
-cfg.calcdof     = 'yes';
-cfg.taper       = 'hanning';
-cfg.foilim      = [1 40];
-data_freq       = ft_freqanalysis( cfg, data );
-
-cfg             = [];
-cfg.layout      = 'neuromag306all.lay';
-cfg.showlabels  = 'no';
-cfg.ylim        = [0 3e-27];
-figure();
-ft_multiplotER( cfg, data_freq );
-
-function plot_tf(data)
-global g_analysisTimes;
-
-cfg             = [];
-cfg.channel     = {'M*'};
-cfg.output      = 'pow';
-cfg.method      = 'mtmconvol';
-cfg.taper       = 'hanning';
-cfg.foi         = 1:30;
-cfg.t_ftimwin   = 2./cfg.foi;
-cfg.toi         = -g_analysisTimes(1)/1000:0.05:g_analysisTimes(2)/1000;
-data_freq_varWind = ft_freqanalysis(cfg, data);
-
-cfg             = [];
-cfg.showlabels  = 'no';	
-cfg.layout      = 'neuromag306all.lay';
-cfg.zlim        = 'maxabs';
-figure();
-ft_multiplotTFR(cfg, data_freq_varWind);
-
-tfr_zaxis_size = cfg.zlim;
-while ~isempty(tfr_zaxis_size)
-    tfr_zaxis_size = input( 'Input alternate zlim (leave blank to continue): ');
-    if ismatrix(tfr_zaxis_size) && ~isempty(tfr_zaxis_size)
-        cfg.zlim = tfr_zaxis_size;
-        ft_multiplotTFR(cfg, data_freq_varWind);
-    end
 end
