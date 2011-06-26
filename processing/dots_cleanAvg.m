@@ -30,20 +30,12 @@ subj_data       = sprintf('subject%i_ses%i_%i', subj, sess, run);
 save_path       = sprintf('/Volumes/ShadyBackBowls/meg_data/Dots/%i/matlab-files/', subj);
 meg_full_file   = sprintf('/Volumes/ShadyBackBowls/meg_data/Dots/%i/%s', subj, dataset);
 
-% for use in subfunctions
-global g_save_path g_subj g_sess g_run g_analysisTimes;
-g_save_path = save_path;
-g_subj      = subj;
-g_sess      = sess;
-g_run       = run;
-g_analysisTimes = analysisTimes;
-
 %
 % Setup configuration structure
 %
 
 if ~exist(meg_full_file, 'file')
-    error('fif file not found. Please verify %s exists and that trigger_fix has been run.', meg_full_file); %#ok<SPERR>
+    error('fif file not found. Please verify %s exists.', meg_full_file); %#ok<SPERR>
 end
 
 if ~exist([subj_data '.mat'], 'file')
@@ -55,9 +47,14 @@ if ~exist(save_path, 'dir')
 end
 
 % Run trigger_fix if necessary
-if isempty( strfind( meg_full_file, 'trigFix' ) )
-    disp('Trigger_fix not yet run, executing now...');
-    meg_full_file = trigger_fix( meg_full_file );
+if ~strcmp( meg_full_file(end-10:end-4), 'trigFix' )
+    if exist([meg_full_file(1:end-4) '_trigFix.fif'], 'file')
+        meg_full_file = [meg_full_file(1:end-4) '_trigFix.fif'];
+        disp('Found identical file with trigger_fix applied, using that file...');
+    else
+        disp('trigger_fix not yet run, executing now...');
+        meg_full_file = trigger_fix( meg_full_file );
+    end
 end
 
 cfg_base            = struct;                           % ## CFG RESET! ##
@@ -91,10 +88,11 @@ if ~exist( 'Right_RT', 'var' )
 end
 
 % Define input parameters if not provided at runtime. Down here instead of
-% at top due to use of `cohVec`.
-SetDefaultValue(5, 'aveTimes',      {'stim', 'resp'});
-SetDefaultValue(6, 'aveParams',     {{'coh', unique(cohVec)}, {'respdir','RL'}});
-SetDefaultValue(7, 'analysisTimes', [1000 1000]);
+% at top due to use of `cohVec`. Most common is below, other options are
+% commented out.
+SetDefaultValue(5, 'aveTimes',      {'resp'}); % , 'stim'});
+SetDefaultValue(6, 'aveParams',     {{'coh', unique(cohVec)}}); % , {'respdir','RL'}});
+SetDefaultValue(7, 'analysisTimes', [1000 500]);
 
 for n = 1:length(aveParams)
     if iscellstr(aveParams{n}(2)) && strcmp(aveParams{n}(2), 'all')
@@ -179,21 +177,21 @@ for aveParam = 1:length(aveParams)
                 title       = sprintf( '%s, %s, %s', base_plot_name_ssr, 'time series', base_plot_name_param );
                 my_set_title(gcf, title, 'no processing');
                 save_file    = sprintf( '%s-%s.pdf', base_file_name, 'noProc-time' );
-                save_figure( gcf, [save_path 'figures/' save_file] );
+                my_save_figure( gcf, save_file, [save_path 'figures/'] );
 
                 % freq plot
                 myft_plot_freq(data_preprocessed);
                 title       = sprintf( '%s, %s, %s', base_plot_name_ssr, 'frequency plot', base_plot_name_param );
                 my_set_title(gcf, title, 'no processing');
                 save_file    = sprintf( '%s-%s.pdf', base_file_name, 'noProc-freq' );
-                save_figure( gcf, [save_path 'figures/' save_file] );
+                my_save_figure( gcf, save_file, [save_path 'figures/'] );
 
                 % time-freq plot
                 myft_plot_tf(data_preprocessed, analysisTimes);
                 title       = sprintf( '%s, %s, %s', base_plot_name_ssr, 'time-frequency', base_plot_name_param );
                 my_set_title(gcf, title, 'no processing');
                 save_file    = sprintf( '%s-%s.pdf', base_file_name, 'noProc-tf' );
-                save_figure( gcf, [save_path 'figures/' save_file] );
+                my_save_figure( gcf, save_file, [save_path 'figures/'] );
             end
 
             % The while loop allows denoising, viewing of the TFR, and then
@@ -266,23 +264,23 @@ for aveParam = 1:length(aveParams)
                     % time plot
                     myft_plot_time(data_preprocessed);
                     title       = sprintf( '%s, %s, %s', base_plot_name_ssr, 'time series', base_plot_name_param );
-                    my_set_title(gcf, title, 'no processing');
-                    save_file    = sprintf( '%s-%s.pdf', base_file_name, 'noProc-time' );
-                    save_figure( gcf, [save_path 'figures/' save_file] );
+                    my_set_title(gcf, title, 'ICA & reject bad trials');
+                    save_file    = sprintf( '%s-%s.pdf', base_file_name, 'proc-time' );
+                    my_save_figure( gcf, save_file, [save_path 'figures/'] );
 
                     % freq plot
                     myft_plot_freq(data_preprocessed);
                     title       = sprintf( '%s, %s, %s', base_plot_name_ssr, 'frequency plot', base_plot_name_param );
-                    my_set_title(gcf, title, 'no processing');
-                    save_file    = sprintf( '%s-%s.pdf', base_file_name, 'noProc-freq' );
-                    save_figure( gcf, [save_path 'figures/' save_file] );
+                    my_set_title(gcf, title, 'ICA & reject bad trials');
+                    save_file    = sprintf( '%s-%s.pdf', base_file_name, 'proc-freq' );
+                    my_save_figure( gcf, save_file, [save_path 'figures/'] );
 
                     % time-freq plot
                     myft_plot_tf(data_preprocessed, analysisTimes);
                     title       = sprintf( '%s, %s, %s', base_plot_name_ssr, 'time-frequency', base_plot_name_param );
-                    my_set_title(gcf, title, 'no processing');
-                    save_file    = sprintf( '%s-%s.pdf', base_file_name, 'noProc-tf' );
-                    save_figure( gcf, [save_path 'figures/' save_file] );
+                    my_set_title(gcf, title, 'ICA & reject bad trials');
+                    save_file    = sprintf( '%s-%s.pdf', base_file_name, 'proc-tf' );
+                    my_save_figure( gcf, save_file, [save_path 'figures/'] );
                 end
 
                 break_keyboard = input('Enable keyboard? (y/N) ', 's');
@@ -299,57 +297,10 @@ for aveParam = 1:length(aveParams)
             cfg.keeptrials  = 'no';
             cfg.covariance  = 'yes';
             data_timelock   = ft_timelockanalysis(cfg, data_preprocessed); %#ok<NASGU>
-            savefile = [subj_data '-timelock-'  char(aveTimes(aveTime)) '-' num2str(aveParams{aveParam}{1}) '-' num2str(aveParams{aveParam}{2}(aveParamValue)) '.mat'];
+            savefile = [num2str(subj) '-' num2str(sess) '-' num2str(run) '-timelock-'  char(aveTimes(aveTime)) '-' num2str(aveParams{aveParam}{1}) '-' num2str(aveParams{aveParam}{2}(aveParamValue)) '.mat'];
             save([save_path savefile], 'data_timelock');
             disp(['File saved: ' savefile]);
 
         end
     end
-end
-
-% Save a given figure to matlab-files/figures with a user-defined title and
-% filename
-function save_figure(h, plotType, plotVar, plotExtra, plotSaveName)
-% get base directory
-global g_save_path g_subj g_sess g_run;
-
-title( sprintf( 'Subject %i, session %i, run %i, %s, %s, %s\n', g_subj, g_sess, g_run, plotType, plotVar, plotExtra ) );
-
-beep;
-save_figure = input( 'Save figure? (Y/n) ', 's' );
-
-if ~strcmp( save_figure, 'n' )
-    if ~exist( [g_save_path 'figures'], 'dir' )
-        mkdir( g_save_path, 'figures' );
-    end
-    
-    % set figure name
-    extra = input( 'Modify comment (leave blank if OK as is): ', 's' );
-    if strlen(extra) > 0
-        title( sprintf( 'Subject %i, session %i, run %i, %s, %s, %s\n', g_subj, g_sess, g_run, plotType, plotVar, extra ) );
-    end
-
-    % get file name, ensure file doesn't already exist
-    save_ok = 'n';
-    while ~strcmp(save_ok, 'y')
-        save_name = sprintf( '%i-%i-%i-%s.pdf', g_subj, g_sess, g_run, plotSaveName );
-        fprintf('Default save name: %s\n', save_name);
-        
-        new_save_name = input( 'Input new file name (leave blank if OK as is): ', 's' );
-        if strlen(new_save_name) > 0
-            save_name = new_save_name;
-        end
-        
-        if exist( [g_save_path 'figures/' save_name], 'file' )
-            save_ok = input( 'File exists! Overwrite? (y/N) ', 's' );
-
-            if ~strcmp( save_ok, 'y' )
-                save_ok = 'n';
-            end
-        else
-            save_ok = 'y';
-        end
-    end
-    
-    saveas( h, [g_save_path 'figures/' save_name], 'pdf' );
 end
