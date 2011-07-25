@@ -17,7 +17,7 @@ data_freq_varWind = ft_freqanalysis(cfg, data);
 cfg             = [];
 cfg.showlabels  = 'no';	
 cfg.layout      = 'neuromag306all.lay';
-cfg.zlim        = 'maxabs';
+cfg.zlim        = [-7e-26 7e-26];
 figure();
 ft_multiplotTFR(cfg, data_freq_varWind);
 

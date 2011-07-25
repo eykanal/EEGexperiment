@@ -57,12 +57,12 @@ if ~strcmp( meg_full_file(end-10:end-4), 'trigFix' )
     end
 end
 
-cfg_base            = struct;                           % ## CFG RESET! ##
+cfg_base            = struct;
 cfg_base.dataset    = meg_full_file;
 cfg_base.hdr        = ft_read_header(meg_full_file);
 
 % Find triggers on STI101 channel
-cfg = cfg_base;                                         % ## CFG RESET! ##
+cfg = cfg_base;
 hdr   = fiff_setup_read_raw( cfg.dataset );
 picks = fiff_pick_types( hdr.info, false, false, false, {'STI101'} );
 trig  = fiff_read_raw_segment( hdr, hdr.first_samp, hdr.last_samp, picks );
@@ -115,7 +115,7 @@ for aveParam = 1:length(aveParams)
             curr_paramValue     = num2str(aveParams{aveParam}{2}(aveParamValue));
             curr_time           = char(aveTimes(aveTime));
             
-            cfg = cfg_base;                                 % ## CFG RESET! ##
+            cfg = cfg_base;
             cfg.trialfun        = 'defineDotsTrials';
             cfg.dots.data       = data;
             cfg.dots.coh        = cohVec;
@@ -170,8 +170,8 @@ for aveParam = 1:length(aveParams)
             base_file_name      = sprintf( '%i-%i-%i-%s-%s%s', subj, sess, run, curr_time, curr_param, curr_paramValue );
 
             % display plots
-            view_freq_plots = input( 'Do you want to see time/frequency plots? (y/N) ', 's' );
-            if strcmp( view_freq_plots, 'y' )
+            view_freq_plots = input( 'Do you want to see time/frequency plots? (Y/n) ', 's' );
+            if ~strcmp( view_freq_plots, 'n' )
                 % time plot
                 myft_plot_time(data_preprocessed);
                 title       = sprintf( '%s, %s, %s', base_plot_name_ssr, 'time series', base_plot_name_param );
@@ -200,9 +200,8 @@ for aveParam = 1:length(aveParams)
             while strcmp( tfr_denoise_cont, 'y' )
                 
                 % component analysis
-                component_analysis = input( 'Do you want to run ft_componentanalysis? (y/N) ', 's' );
-
-                if strcmp( component_analysis, 'y' )
+                component_analysis = input( 'Do you want to run ft_componentanalysis? (Y/n) ', 's' );
+                if ~strcmp( component_analysis, 'n' )
                     % find magnetometer, gradiometer components
                     channels = {'MEGGRAD', 'MEGMAG'};
                     layouts  = {'neuromag306planar.lay', 'neuromag306mag.lay'};
@@ -220,7 +219,8 @@ for aveParam = 1:length(aveParams)
 
                             cfg                 = [];
                             cfg.layout          = char(layouts(chan));
-                            ft_componentbrowser(cfg, data_components);
+                            cfg.viewmode        = 'component';
+                            ft_databrowser(cfg, data_components);
                             reject              = input( 'Enter components to reject (leave blank for none): ');
 
                             if ~isempty( reject )
@@ -236,6 +236,7 @@ for aveParam = 1:length(aveParams)
                 end
 
                 % Examine data for noise
+                cfg = cfg_base;
                 cfg.channel         = 'M*';  % remove STI channels
                 cfg.megscale        = 1;
                 cfg.eogscale        = 5e-8;
@@ -247,7 +248,7 @@ for aveParam = 1:length(aveParams)
                 data_preprocessed   = ft_rejectvisual(cfg, data_preprocessed);
                 cfg.method          = 'summary';
                 cfg.metric          = 'maxabs';
-                cfg.viewmode        = 'toggle';
+                cfg.layout          = 'neuromag306all.lay';
                 data_preprocessed   = ft_rejectvisual(cfg, data_preprocessed);
 
                 save_preprocessed = input('Save preprocessed data? (Y/n) ', 's');
@@ -259,8 +260,13 @@ for aveParam = 1:length(aveParams)
                     disp(['File saved: ' savefile]);
                 end
 
-                view_freq_plots = input( 'Do you want to see time/frequency plots? (y/N) ', 's' );
-                if strcmp( view_freq_plots, 'y' )
+                % re-define some useful strings (num trials changed)
+                base_plot_name_ssr  = sprintf( 'Subject %i, session %i, run %i, %i trials', subj, sess, run, length( data_preprocessed.trial ) );
+                base_plot_name_param = sprintf('%s (%s) @ %s', curr_param, curr_paramValue, curr_time );
+                base_file_name      = sprintf( '%i-%i-%i-%s-%s%s', subj, sess, run, curr_time, curr_param, curr_paramValue );
+
+                view_freq_plots = input( 'Do you want to see time/frequency plots? (Y/n) ', 's' );
+                if ~strcmp( view_freq_plots, 'n' )
                     % time plot
                     myft_plot_time(data_preprocessed);
                     title       = sprintf( '%s, %s, %s', base_plot_name_ssr, 'time series', base_plot_name_param );

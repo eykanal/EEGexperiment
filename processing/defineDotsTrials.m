@@ -83,12 +83,12 @@ if length([coh right_RT left_RT]) ~= length(data.times.stim)
     for n = 1:length(infs)
         bad_entry = infs(n);
         
-        coh         = [coh(1:bad_entry-1)  coh(bad_entry+1:length(coh))];
-        cue         = [cue(1:bad_entry-1)  cue(bad_entry+1:length(cue))];
-        ER          = [ER (1:bad_entry-1)   ER(bad_entry+1:length(ER))];
-        RT          = [RT (1:bad_entry-1)   RT(bad_entry+1:length(RT))];
-        dir_resp    = [dir_resp(1:bad_entry-1)    dir_resp(bad_entry+1:length(dir))];
-        dir_correct = [dir_correct(1:bad_entry-1) dir_correct(bad_entry+1:length(RDir))];  
+        coh         = [coh(1:bad_entry-1)  coh(bad_entry+1:end)];
+        cue         = [cue(1:bad_entry-1)  cue(bad_entry+1:end)];
+        ER          = [ER (1:bad_entry-1)   ER(bad_entry+1:end)];
+        RT          = [RT (1:bad_entry-1)   RT(bad_entry+1:end)];
+        dir_resp    = [dir_resp(1:bad_entry-1)    dir_resp(bad_entry+1:end)];
+        dir_correct = [dir_correct(1:bad_entry-1) dir_correct(bad_entry+1:end)];  
     end
     
     % Re-check to see if it still doesn't match
