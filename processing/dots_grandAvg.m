@@ -70,15 +70,18 @@ low = { ...
 };
 
 % averaging and plotting
-gAvg_all = grandAvg(all);
-gAvg_high= grandAvg(high);
+%gAvg_all = grandAvg(all);
+%gAvg_high= grandAvg(high);
 gAvg_mid = grandAvg(mid);
-gAvg_low = grandAvg(low);
+%gAvg_low = grandAvg(low);
 
-myft_plot_time(gAvg_all,  'ylim', 'maxmin', 'average', 0); my_set_title(gcf, 'grandAve all');
-myft_plot_time(gAvg_high, 'ylim', 'maxmin', 'average', 0); my_set_title(gcf, 'grandAve high');
-myft_plot_time(gAvg_mid,  'ylim', 'maxmin', 'average', 0); my_set_title(gcf, 'grandAve mid');
-myft_plot_time(gAvg_low,  'ylim', 'maxmin', 'average', 0); my_set_title(gcf, 'grandAve low');
+%myft_plot_time(gAvg_all,  'ylim', [-4.25e-13 4.25e-13], 'average', 0); my_set_title(gcf, 'grandAve all');
+%myft_plot_time(gAvg_high, 'ylim', [-4.25e-13 4.25e-13], 'average', 0); my_set_title(gcf, 'grandAve high');
+myft_plot_time(gAvg_mid,  'ylim', [-4.25e-13 4.25e-13], 'average', 0); my_set_title(gcf, 'grandAve mid');
+%myft_plot_time(gAvg_low,  'ylim', [-4.25e-13 4.25e-13], 'average', 0); my_set_title(gcf, 'grandAve low');
+
+channels = {'MEG2012', 'MEG2013', 'MEG2043', 'MEG2042', 'MEG2022', 'MEG2023', 'MEG2033', 'MEG2032'};
+myft_plot_time(gAvg_mid, 'chans', channels, 'average', 0);
 
 keyboard;
 

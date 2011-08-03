@@ -133,6 +133,9 @@ end
 % do from preTrig ms before onset to postTrig ms after, whether stim or resp
 switch cfg.dots.aveParam
     case 'all'
+        % only use the trial data, not the sigdet data
+        times = times(1:length(cue));
+        
         goodResponses = ( ER == 0 & ~isinf(RT) );
         len = length( times( goodResponses ) );
         trl = zeros( len, 4 );
@@ -143,6 +146,9 @@ switch cfg.dots.aveParam
         trl(:,4) = 1;
 
     case 'coh'
+        % only use the trial data, not the sigdet data
+        times = times(1:length(cue));
+        
         goodResponses = ( cue == 'd' & ER == 0 & ~isinf(RT) & coh == paramValue );
         len = length( times( goodResponses ) );
         trl = zeros( len, 4 );
@@ -153,6 +159,9 @@ switch cfg.dots.aveParam
         trl(:,4) = paramValue;
         
     case 'respdir'
+        % only use the trial data, not the sigdet data
+        times = times(1:length(cue));
+        
         goodResponses = ( cue == 'd' & ER == 0 & ~isinf(RT) & dir_resp == paramValue );
         len = length( times( goodResponses ) );
         trl = zeros( len, 4 );
@@ -166,6 +175,9 @@ switch cfg.dots.aveParam
         trl( dir_resp( goodResponses ) == 'R', 4 ) = 2;
 
     case 'arrow'
+        % only use the trial data, not the sigdet data
+        times = times(1:length(cue));
+        
         % redefine good_responses to 'cue == a', reset len
         goodResponses = ( cue == 'a' & ER == 0 & ~isinf(RT) & dir_correct == paramValue );
         len = length( times( goodResponses ) );
