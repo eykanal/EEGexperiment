@@ -9,6 +9,7 @@ xlim    = keyval('ylim',    varargin); if isempty(xlim),    xlim = 'maxmin';    
 ylim    = keyval('ylim',    varargin); if isempty(ylim),    ylim = [-4.25e-13 4.25e-13];    end
 average = keyval('average', varargin); if isempty(average), average = 1;                    end
 chans   = keyval('chans',   varargin); if isempty(chans),   chans = {'all'};                end
+titles  = keyval('titles',  varargin); if isempty(titles),  titles = chans;                 end
 
 % don't average if already averaged; ruins the variance data
 if average
@@ -48,6 +49,6 @@ else
         ft_singleplotER(cfg, data_timelock, data_timelockU, data_timelockD);
 
         line(get(gca,'xlim'), [0 0], 'Color', [0 0 0]);
-        title(chans{n});
+        title(titles{n});
     end
 end

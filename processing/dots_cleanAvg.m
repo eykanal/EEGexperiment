@@ -16,6 +16,10 @@ function dots_cleanAvg(subj, sess, run, dataset, aveTimes, aveParams, analysisTi
 %   session     5
 %   dataset     4_090710
 %
+% This script relies on the SetDefaultValue.m script created by Richie
+% Cotton, available on Matlab Central:
+% http://www.mathworks.com/matlabcentral/fileexchange/27056-set-default-values
+%
 % Eliezer Kanal, 5/2011
 
 dbstop if error
