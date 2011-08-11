@@ -42,18 +42,38 @@ for n=1:length(all)
     % load preprocessed dataset
     load(dataset);
 
-    % get filename, trial times
+    % get filename
     cfg = [];
     cfg.dataset = data_preprocessed.hdr.orig.raw.info.filename;
-    if isfield(data_preprocessed.cfg,'trl')
-        cfg.trl     = data_preprocessed.cfg.trl;
-    else
-        cfg.trl     = [data_preprocessed.sampleinfo repmat(-1000,size(data_preprocessed.sampleinfo,1),1)];
-    end
+    
+    % get resp trial times
+    resp_trials = [data_preprocessed.sampleinfo repmat(-1000,size(data_preprocessed.sampleinfo,1),1)];
+    resp_trigger_times = resp_trials(:,1)+1000;
+    
+    % Find triggers on STI101 channel
+    hdr     = fiff_setup_read_raw( cfg.dataset );
+    picks   = fiff_pick_types( hdr.info, false, false, false, {'STI101'} );
+    trig    = fiff_read_raw_segment( hdr, hdr.first_samp, hdr.last_samp, picks );
+
+    % Fix so each pulse is exactly 1 ms long
+    trig(trig > 0 & [0 diff(trig)] <= 0) = 0;
+
+    data.values     = trig(trig>0);
+    data.times.raw  = find(trig>0);
+
+    % Time of trigger pulse in ms, including initial skip
+    data.times.stim = data.times.raw(data.values == 1);
+    data.times.resp = data.times.raw(data.values == 2);
+
+    % Find stim equivalent of trial times from resp preprocessed dataset
+    stim_trigger_times = data.times.stim(ismember(data.times.resp, resp_trigger_times))';
+    
+    cfg.trl     = [stim_trigger_times-1000 stim_trigger_times+500 repmat(-1000,size(stim_trigger_times,1),1)];
     cfg.hdr     = data_preprocessed.hdr;
     clear data_preprocessed;
 
     % ft_preprocessing
+    % use cfg.dataset, cfg.trl, and cfg.hdr defined above
     cfg.dftfilter       = 'yes';
     cfg.dftfreq         = [60 120];
     data_preprocessed   = ft_preprocessing(cfg);
@@ -75,9 +95,9 @@ for n=1:length(all)
     path    = fileparts(which(dataset));
     tokens  = regexp(dataset,'(\d{2})-(\d)-(\d)-preprocessed-resp-coh-(\d{1,2}\.?\d?)\.mat','tokens');
     tokens  = tokens{1};
-    save([path '/' sprintf('%s-%s-%s-preprocessed2-resp-coh-%s.mat',tokens{1},tokens{2},tokens{3},tokens{4})], 'data_preprocessed');
+    save([path '/' sprintf('%s-%s-%s-preprocessed-stim-coh-%s.mat',tokens{1},tokens{2},tokens{3},tokens{4})], 'data_preprocessed');
 end
 
 % run TFR, save, plot, save
-disp('Don''t forget to run a modified`dots_freqAnalysis` to run over the `preprocessed2` datasets!');
+disp('Don''t forget to run a modified`dots_freqAnalysis` to run over the `stim` datasets!');
 
