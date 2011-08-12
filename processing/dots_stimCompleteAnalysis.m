@@ -70,7 +70,7 @@ for n=1:length(all)
     cfg.taper       = 'hanning';
     cfg.foi         = 1:1:100;
     cfg.t_ftimwin   = 5./cfg.foi;
-    cfg.toi         = -0.7:0.05:0.1;
+    cfg.toi         = -0.1:0.05:0.7;
     cfg.verbose     = 0;
     data_freq_varWind = ft_freqanalysis(cfg, data_preprocessed);
     
@@ -175,7 +175,7 @@ for n=1:length(all)
     cfg.zlim        = [-7e-26 7e-26];
     
         % 1-100
-    cfg.xlim   = [1 100];
+    cfg.ylim   = [1 100];
     
     h = figure();
     cfg.layout      = 'neuromag306mag.lay';
@@ -192,7 +192,7 @@ for n=1:length(all)
     close(h);
     
         % 1-40
-    cfg.xlim   = [1 40];
+    cfg.ylim   = [1 40];
     
     h = figure();
     cfg.layout      = 'neuromag306mag.lay';
