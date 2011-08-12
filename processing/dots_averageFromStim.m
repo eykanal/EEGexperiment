@@ -68,7 +68,7 @@ for n=1:length(all)
     % Find stim equivalent of trial times from resp preprocessed dataset
     stim_trigger_times = data.times.stim(ismember(data.times.resp, resp_trigger_times))';
     
-    cfg.trl     = [stim_trigger_times-1000 stim_trigger_times+500 repmat(-1000,size(stim_trigger_times,1),1)];
+    cfg.trl     = [stim_trigger_times-500 stim_trigger_times+1000 repmat(-500,size(stim_trigger_times,1),1)];
     cfg.hdr     = data_preprocessed.hdr;
     clear data_preprocessed;
 
@@ -99,5 +99,5 @@ for n=1:length(all)
 end
 
 % run TFR, save, plot, save
-disp('Don''t forget to run a modified`dots_freqAnalysis` to run over the `stim` datasets!');
+disp('Don''t forget to run a modified `dots_freqAnalysis` to run over the `stim` datasets!');
 
