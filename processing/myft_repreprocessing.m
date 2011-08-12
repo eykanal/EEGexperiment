@@ -1,3 +1,9 @@
+% This function was used to re-do the frequency analysis to include higher
+% frequencies. I had previously done a 1-40 bandpass filter to remove
+% unnecessary noise, but after finding significant signals during viewing
+% in lower frequencies we wanted to examine higher frequencies for similar
+% signals.
+
 all = { ...
 '17-4-1-preprocessed-resp-coh-20.mat', ...
 '17-4-1-preprocessed-resp-coh-6.mat', ...

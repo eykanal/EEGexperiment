@@ -1,3 +1,7 @@
+% This script takes the cleaned trials (i.e., all noisy trials removed)
+% from the resp datasets, finds their trigger times, finds the
+% corresponding stim times, and makes new preprocessed files based on them.
+
 all = { ...
 '17-4-1-preprocessed-resp-coh-20.mat', ...
 '17-4-1-preprocessed-resp-coh-6.mat', ...
@@ -72,8 +76,10 @@ for n=1:length(all)
     cfg.hdr     = data_preprocessed.hdr;
     clear data_preprocessed;
 
-    % ft_preprocessing
+    % remove line noise, low freq oscillations
     % use cfg.dataset, cfg.trl, and cfg.hdr defined above
+    cfg.hpfilter        = 'yes';
+    cfg.hpfreq          = 1;
     cfg.dftfilter       = 'yes';
     cfg.dftfreq         = [60 120];
     data_preprocessed   = ft_preprocessing(cfg);
@@ -99,5 +105,5 @@ for n=1:length(all)
 end
 
 % run TFR, save, plot, save
-disp('Don''t forget to run a modified `dots_freqAnalysis` to run over the `stim` datasets!');
+disp('Don''t forget to run a modified `dots_stimCompleteAnalysis` to run over the `stim` datasets!');
 
