@@ -93,7 +93,7 @@ for analyses = {'stim','resp'}
                     save([path '/' filename], 'data_freq_varWind');
                 elseif strcmp(cond,'preprocessed')
                     data_preprocessed = ft_appenddata([], data(:).data_preprocessed);
-                    save
+                    save([path '/' filename], 'data_preprocessed');
                 else
                     error('Cond not recognized.')
                 end

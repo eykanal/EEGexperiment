@@ -1,35 +1,35 @@
 all = { ...
-'17-4-1-preprocessed-stim-coh-20.mat', ...
-'17-4-1-preprocessed-stim-coh-6.mat', ...
-'17-4-1-preprocessed-stim-coh-8.5.mat', ...
-'17-4-2-preprocessed-stim-coh-20.mat', ...
-'17-4-2-preprocessed-stim-coh-6.mat', ...
-'17-4-2-preprocessed-stim-coh-8.5.mat', ...
-'17-4-3-preprocessed-stim-coh-20.mat', ...
-'17-4-3-preprocessed-stim-coh-8.5.mat', ...
-'17-4-4-preprocessed-stim-coh-20.mat', ...
-'17-4-4-preprocessed-stim-coh-8.5.mat', ...
-'18-5-1-preprocessed-stim-coh-12.mat', ...
-'18-5-1-preprocessed-stim-coh-25.mat', ...
-'18-5-1-preprocessed-stim-coh-7.mat', ...
-'18-6-1-preprocessed-stim-coh-12.mat', ...
-'18-6-1-preprocessed-stim-coh-25.mat', ...
-'18-6-1-preprocessed-stim-coh-7.mat', ...
-'18-6-2-preprocessed-stim-coh-12.mat', ...
-'18-6-2-preprocessed-stim-coh-25.mat', ...
-'18-6-2-preprocessed-stim-coh-7.mat', ...
-'18-6-3-preprocessed-stim-coh-12.mat', ...
-'18-6-3-preprocessed-stim-coh-25.mat', ...
-'18-6-3-preprocessed-stim-coh-7.mat', ...
-'19-6-1-preprocessed-stim-coh-15.mat', ...
-'19-6-1-preprocessed-stim-coh-25.mat', ...
-'19-6-1-preprocessed-stim-coh-8.mat', ...
-'19-6-2-preprocessed-stim-coh-15.mat', ...
-'19-6-2-preprocessed-stim-coh-25.mat', ...
-'19-6-2-preprocessed-stim-coh-8.mat', ...
-'19-6-3-preprocessed-stim-coh-15.mat', ...
-'19-6-3-preprocessed-stim-coh-25.mat', ...
-'19-6-3-preprocessed-stim-coh-8.mat', ...
+'17-4-1-preprocessed-resp-coh-20.mat', ...
+'17-4-1-preprocessed-resp-coh-6.mat', ...
+'17-4-1-preprocessed-resp-coh-8.5.mat', ...
+'17-4-2-preprocessed-resp-coh-20.mat', ...
+'17-4-2-preprocessed-resp-coh-6.mat', ...
+'17-4-2-preprocessed-resp-coh-8.5.mat', ...
+'17-4-3-preprocessed-resp-coh-20.mat', ...
+'17-4-3-preprocessed-resp-coh-8.5.mat', ...
+'17-4-4-preprocessed-resp-coh-20.mat', ...
+'17-4-4-preprocessed-resp-coh-8.5.mat', ...
+'18-5-1-preprocessed-resp-coh-12.mat', ...
+'18-5-1-preprocessed-resp-coh-25.mat', ...
+'18-5-1-preprocessed-resp-coh-7.mat', ...
+'18-6-1-preprocessed-resp-coh-12.mat', ...
+'18-6-1-preprocessed-resp-coh-25.mat', ...
+'18-6-1-preprocessed-resp-coh-7.mat', ...
+'18-6-2-preprocessed-resp-coh-12.mat', ...
+'18-6-2-preprocessed-resp-coh-25.mat', ...
+'18-6-2-preprocessed-resp-coh-7.mat', ...
+'18-6-3-preprocessed-resp-coh-12.mat', ...
+'18-6-3-preprocessed-resp-coh-25.mat', ...
+'18-6-3-preprocessed-resp-coh-7.mat', ...
+'19-6-1-preprocessed-resp-coh-15.mat', ...
+'19-6-1-preprocessed-resp-coh-25.mat', ...
+'19-6-1-preprocessed-resp-coh-8.mat', ...
+'19-6-2-preprocessed-resp-coh-15.mat', ...
+'19-6-2-preprocessed-resp-coh-25.mat', ...
+'19-6-2-preprocessed-resp-coh-8.mat', ...
+'19-6-3-preprocessed-resp-coh-15.mat', ...
+'19-6-3-preprocessed-resp-coh-25.mat', ...
+'19-6-3-preprocessed-resp-coh-8.mat', ...
 };
 
 high = findSubset(all, '-(20|25)\.mat');
@@ -70,7 +70,7 @@ for n=1:length(all)
     cfg.taper       = 'hanning';
     cfg.foi         = 1:1:100;
     cfg.t_ftimwin   = 5./cfg.foi;
-    cfg.toi         = -0.1:0.05:0.7;
+    cfg.toi         = -0.7:0.05:0.1;
     cfg.verbose     = 0;
     data_freq_varWind = ft_freqanalysis(cfg, data_preprocessed);
     
@@ -96,11 +96,11 @@ for n=1:length(all)
     end
     
     path    = fileparts(which(all{n}));
-    tokens  = regexp(all{n},'(\d{2})-(\d)-(\d)-preprocessed-stim-coh-(\d{1,2}\.?\d?)\.mat','tokens');
+    tokens  = regexp(all{n},'(\d{2})-(\d)-(\d)-preprocessed-resp-coh-(\d{1,2}\.?\d?)\.mat','tokens');
     tokens  = tokens{1};
-    save([path '/' sprintf('%s-%s-%s-timelock-stim-coh-%s.mat',tokens{1},tokens{2},tokens{3},tokens{4})], 'data_timelock');
-    save([path '/' sprintf('%s-%s-%s-freq-stim-coh-%s.mat',tokens{1},tokens{2},tokens{3},tokens{4})], 'data_freq');
-    save([path '/' sprintf('%s-%s-%s-tf-stim-coh-%s.mat',tokens{1},tokens{2},tokens{3},tokens{4})], 'data_freq_varWind');
+    save([path '/' sprintf('%s-%s-%s-timelock-resp-coh-%s.mat',tokens{1},tokens{2},tokens{3},tokens{4})], 'data_timelock');
+    save([path '/' sprintf('%s-%s-%s-freq-resp-coh-%s.mat',tokens{1},tokens{2},tokens{3},tokens{4})], 'data_freq');
+    save([path '/' sprintf('%s-%s-%s-tf-resp-coh-%s.mat',tokens{1},tokens{2},tokens{3},tokens{4})], 'data_freq_varWind');
 
     % plot figures, save plots to disk
     num_trials = length(data_preprocessed.trial);
@@ -119,15 +119,15 @@ for n=1:length(all)
     h = figure();
     cfg.layout          = 'neuromag306mag.lay';
     ft_multiplotER(cfg, data_timelock, data_timelockU, data_timelockD);
-    title(sprintf('Subject %s, session %s, run %s, %i trials, time series, coh (%s) @ stim, processed',tokens{1},tokens{2},tokens{3},num_trials,tokens{4}));
-    saveas(h, [path '/figures/' sprintf('%s-%s-%s-freq-stim-coh%s-proc-time-mag.pdf',tokens{1},tokens{2},tokens{3},tokens{4})]);
+    title(sprintf('Subject %s, session %s, run %s, %i trials, time series, coh (%s) @ resp, processed',tokens{1},tokens{2},tokens{3},num_trials,tokens{4}));
+    saveas(h, [path '/figures/' sprintf('%s-%s-%s-freq-resp-coh%s-proc-time-mag.pdf',tokens{1},tokens{2},tokens{3},tokens{4})]);
     close(h);
     
     h = figure();
     cfg.layout          = 'neuromag306planar.lay';
     ft_multiplotER(cfg, data_timelock, data_timelockU, data_timelockD);
-    title(sprintf('Subject %s, session %s, run %s, %i trials, time series, coh (%s) @ stim, processed',tokens{1},tokens{2},tokens{3},num_trials,tokens{4}));
-    saveas(h, [path '/figures/' sprintf('%s-%s-%s-freq-stim-coh%s-proc-time-grad.pdf',tokens{1},tokens{2},tokens{3},tokens{4})]);
+    title(sprintf('Subject %s, session %s, run %s, %i trials, time series, coh (%s) @ resp, processed',tokens{1},tokens{2},tokens{3},num_trials,tokens{4}));
+    saveas(h, [path '/figures/' sprintf('%s-%s-%s-freq-resp-coh%s-proc-time-grad.pdf',tokens{1},tokens{2},tokens{3},tokens{4})]);
     close(h);
 
     % freq
@@ -141,15 +141,15 @@ for n=1:length(all)
     h = figure();
     cfg.layout      = 'neuromag306mag.lay';
     ft_multiplotER( cfg, data_freq );
-    title(sprintf('Subject %s, session %s, run %s, %i trials, frequency, coh (%s) @ stim, processed',tokens{1},tokens{2},tokens{3},num_trials,tokens{4}));
-    saveas(h, [path '/figures/' sprintf('%s-%s-%s-freq-stim-coh%s-proc-freq-1-100-mag.pdf',tokens{1},tokens{2},tokens{3},tokens{4})]);
+    title(sprintf('Subject %s, session %s, run %s, %i trials, frequency, coh (%s) @ resp, processed',tokens{1},tokens{2},tokens{3},num_trials,tokens{4}));
+    saveas(h, [path '/figures/' sprintf('%s-%s-%s-freq-resp-coh%s-proc-freq-1-100-mag.pdf',tokens{1},tokens{2},tokens{3},tokens{4})]);
     close(h);
 
     h = figure();
     cfg.layout      = 'neuromag306planar.lay';
     ft_multiplotER( cfg, data_freq );
-    title(sprintf('Subject %s, session %s, run %s, %i trials, frequency, coh (%s) @ stim, processed',tokens{1},tokens{2},tokens{3},num_trials,tokens{4}));
-    saveas(h, [path '/figures/' sprintf('%s-%s-%s-freq-stim-coh%s-proc-freq-1-100-grad.pdf',tokens{1},tokens{2},tokens{3},tokens{4})]);
+    title(sprintf('Subject %s, session %s, run %s, %i trials, frequency, coh (%s) @ resp, processed',tokens{1},tokens{2},tokens{3},num_trials,tokens{4}));
+    saveas(h, [path '/figures/' sprintf('%s-%s-%s-freq-resp-coh%s-proc-freq-1-100-grad.pdf',tokens{1},tokens{2},tokens{3},tokens{4})]);
     close(h);
     
         % 1-40
@@ -158,54 +158,55 @@ for n=1:length(all)
     h = figure();
     cfg.layout      = 'neuromag306mag.lay';
     ft_multiplotER( cfg, data_freq );
-    title(sprintf('Subject %s, session %s, run %s, %i trials, frequency, coh (%s) @ stim, processed',tokens{1},tokens{2},tokens{3},num_trials,tokens{4}));
-    saveas(h, [path '/figures/' sprintf('%s-%s-%s-freq-stim-coh%s-proc-freq-1-40-mag.pdf',tokens{1},tokens{2},tokens{3},tokens{4})]);
+    title(sprintf('Subject %s, session %s, run %s, %i trials, frequency, coh (%s) @ resp, processed',tokens{1},tokens{2},tokens{3},num_trials,tokens{4}));
+    saveas(h, [path '/figures/' sprintf('%s-%s-%s-freq-resp-coh%s-proc-freq-1-40-mag.pdf',tokens{1},tokens{2},tokens{3},tokens{4})]);
     close(h);
 
     h = figure();
     cfg.layout      = 'neuromag306planar.lay';
     ft_multiplotER( cfg, data_freq );
-    title(sprintf('Subject %s, session %s, run %s, %i trials, frequency, coh (%s) @ stim, processed',tokens{1},tokens{2},tokens{3},num_trials,tokens{4}));
-    saveas(h, [path '/figures/' sprintf('%s-%s-%s-freq-stim-coh%s-proc-freq-1-40-grad.pdf',tokens{1},tokens{2},tokens{3},tokens{4})]);
+    title(sprintf('Subject %s, session %s, run %s, %i trials, frequency, coh (%s) @ resp, processed',tokens{1},tokens{2},tokens{3},num_trials,tokens{4}));
+    saveas(h, [path '/figures/' sprintf('%s-%s-%s-freq-resp-coh%s-proc-freq-1-40-grad.pdf',tokens{1},tokens{2},tokens{3},tokens{4})]);
     close(h);
 
     % tf
     cfg             = [];
     cfg.showlabels  = 'no';	
-    cfg.zlim        = [-7e-26 7e-26];
     
         % 1-100
     cfg.ylim   = [1 100];
+    cfg.zlim        = [-7e-27 7e-27];
     
     h = figure();
     cfg.layout      = 'neuromag306mag.lay';
     ft_multiplotTFR(cfg, data_freq_varWind);
-    title(sprintf('Subject %s, session %s, run %s, %i trials, time-frequency, coh (%s) @ stim, processed',tokens{1},tokens{2},tokens{3},num_trials,tokens{4}));
-    saveas(h, [path '/figures/' sprintf('%s-%s-%s-freq-stim-coh%s-proc-tf-1-100-mag.pdf', tokens{1},tokens{2},tokens{3},tokens{4})]);
+    title(sprintf('Subject %s, session %s, run %s, %i trials, time-frequency, coh (%s) @ resp, processed',tokens{1},tokens{2},tokens{3},num_trials,tokens{4}));
+    saveas(h, [path '/figures/' sprintf('%s-%s-%s-freq-resp-coh%s-proc-tf-1-100-mag.pdf', tokens{1},tokens{2},tokens{3},tokens{4})]);
     close(h);
 
     h = figure();
     cfg.layout      = 'neuromag306planar.lay';
     ft_multiplotTFR(cfg, data_freq_varWind);
-    title(sprintf('Subject %s, session %s, run %s, %i trials, time-frequency, coh (%s) @ stim, processed',tokens{1},tokens{2},tokens{3},num_trials,tokens{4}));
-    saveas(h, [path '/figures/' sprintf('%s-%s-%s-freq-stim-coh%s-proc-tf-1-100-grad.pdf',tokens{1},tokens{2},tokens{3},tokens{4})]);
+    title(sprintf('Subject %s, session %s, run %s, %i trials, time-frequency, coh (%s) @ resp, processed',tokens{1},tokens{2},tokens{3},num_trials,tokens{4}));
+    saveas(h, [path '/figures/' sprintf('%s-%s-%s-freq-resp-coh%s-proc-tf-1-100-grad.pdf',tokens{1},tokens{2},tokens{3},tokens{4})]);
     close(h);
     
         % 1-40
     cfg.ylim   = [1 40];
+    cfg.zlim        = [-2e-26 2e-26];
     
     h = figure();
     cfg.layout      = 'neuromag306mag.lay';
     ft_multiplotTFR(cfg, data_freq_varWind);
-    title(sprintf('Subject %s, session %s, run %s, %i trials, time-frequency, coh (%s) @ stim, processed',tokens{1},tokens{2},tokens{3},num_trials,tokens{4}));
-    saveas(h, [path '/figures/' sprintf('%s-%s-%s-freq-stim-coh%s-proc-tf-1-40-mag.pdf', tokens{1},tokens{2},tokens{3},tokens{4})]);
+    title(sprintf('Subject %s, session %s, run %s, %i trials, time-frequency, coh (%s) @ resp, processed',tokens{1},tokens{2},tokens{3},num_trials,tokens{4}));
+    saveas(h, [path '/figures/' sprintf('%s-%s-%s-freq-resp-coh%s-proc-tf-1-40-mag.pdf', tokens{1},tokens{2},tokens{3},tokens{4})]);
     close(h);
 
     h = figure();
     cfg.layout      = 'neuromag306planar.lay';
     ft_multiplotTFR(cfg, data_freq_varWind);
-    title(sprintf('Subject %s, session %s, run %s, %i trials, time-frequency, coh (%s) @ stim, processed',tokens{1},tokens{2},tokens{3},num_trials,tokens{4}));
-    saveas(h, [path '/figures/' sprintf('%s-%s-%s-freq-stim-coh%s-proc-tf-1-40-grad.pdf',tokens{1},tokens{2},tokens{3},tokens{4})]);
+    title(sprintf('Subject %s, session %s, run %s, %i trials, time-frequency, coh (%s) @ resp, processed',tokens{1},tokens{2},tokens{3},num_trials,tokens{4}));
+    saveas(h, [path '/figures/' sprintf('%s-%s-%s-freq-resp-coh%s-proc-tf-1-40-grad.pdf',tokens{1},tokens{2},tokens{3},tokens{4})]);
     close(h);
 
     clear data_timelock data_freq data_freq_varWind;
@@ -217,12 +218,12 @@ end
 % data_grand_low  = data_grand_low(2:end);
 
 % grand averaging
-
-% time
 cfg = [];
 cfg.channel     = {'M*'};
-cfg.keeptrials  = 'no';
+cfg.keeptrials  = 'yes';
 cfg.covariance  = 'yes';
+
+% time
 data_grandAvg_timelock      = ft_timelockgrandaverage(cfg, data_grand_high(:).data_timelock, data_grand_mid(:).data_timelock, data_grand_low(:).data_timelock);
 data_grandAvg_timelock_high = ft_timelockgrandaverage(cfg, data_grand_high(:).data_timelock);
 data_grandAvg_timelock_mid  = ft_timelockgrandaverage(cfg, data_grand_mid(:).data_timelock);
@@ -243,20 +244,20 @@ clear data_grand_high data_grand_mid data_grand_low;
 % save to disk
 grandAvg_path = '/Volumes/ShadyBackBowls/meg_data/Dots/grandAvg/';
 
-save([grandAvg_path 'stim-coh-gAvg-timelock.mat'     ], 'data_grandAvg_timelock');
-save([grandAvg_path 'stim-coh-gAvg-timelock-high.mat'], 'data_grandAvg_timelock_high');
-save([grandAvg_path 'stim-coh-gAvg-timelock-mid.mat' ], 'data_grandAvg_timelock_mid');
-save([grandAvg_path 'stim-coh-gAvg-timelock-low.mat' ], 'data_grandAvg_timelock_low');
+save([grandAvg_path 'resp-coh-gAvg-timelock.mat'     ], 'data_grandAvg_timelock');
+save([grandAvg_path 'resp-coh-gAvg-timelock-high.mat'], 'data_grandAvg_timelock_high');
+save([grandAvg_path 'resp-coh-gAvg-timelock-mid.mat' ], 'data_grandAvg_timelock_mid');
+save([grandAvg_path 'resp-coh-gAvg-timelock-low.mat' ], 'data_grandAvg_timelock_low');
 
-save([grandAvg_path 'stim-coh-gAvg-freq.mat'     ], 'data_grandAvg_freq');
-save([grandAvg_path 'stim-coh-gAvg-freq-high.mat'], 'data_grandAvg_freq_high');
-save([grandAvg_path 'stim-coh-gAvg-freq-mid.mat' ], 'data_grandAvg_freq_mid');
-save([grandAvg_path 'stim-coh-gAvg-freq-low.mat' ], 'data_grandAvg_freq_low');
+save([grandAvg_path 'resp-coh-gAvg-freq.mat'     ], 'data_grandAvg_freq');
+save([grandAvg_path 'resp-coh-gAvg-freq-high.mat'], 'data_grandAvg_freq_high');
+save([grandAvg_path 'resp-coh-gAvg-freq-mid.mat' ], 'data_grandAvg_freq_mid');
+save([grandAvg_path 'resp-coh-gAvg-freq-low.mat' ], 'data_grandAvg_freq_low');
 
-save([grandAvg_path 'stim-coh-gAvg-freqVarWind.mat'     ], 'data_grandAvg_freq_varWind');
-save([grandAvg_path 'stim-coh-gAvg-freqVarWind-high.mat'], 'data_grandAvg_freq_varWind_high');
-save([grandAvg_path 'stim-coh-gAvg-freqVarWind-mid.mat' ], 'data_grandAvg_freq_varWind_mid');
-save([grandAvg_path 'stim-coh-gAvg-freqVarWind-low.mat' ], 'data_grandAvg_freq_varWind_low');
+save([grandAvg_path 'resp-coh-gAvg-freqVarWind.mat'     ], 'data_grandAvg_freq_varWind');
+save([grandAvg_path 'resp-coh-gAvg-freqVarWind-high.mat'], 'data_grandAvg_freq_varWind_high');
+save([grandAvg_path 'resp-coh-gAvg-freqVarWind-mid.mat' ], 'data_grandAvg_freq_varWind_mid');
+save([grandAvg_path 'resp-coh-gAvg-freqVarWind-low.mat' ], 'data_grandAvg_freq_varWind_low');
 
 % plot figures, save plots to disk
 
@@ -283,15 +284,15 @@ cfg.showlabels  = 'no';
 cfg.ylim        = [-4.25e-13 4.25e-13];
 cfg.graphcolor  = [0 0 1; 0.6 0.6 1; 0.6 0.6 1];
 cfg.layout = 'neuromag306mag.lay';
-h = figure();   ft_multiplotER( cfg, data_grandAvg_timelock,      data_timelockU_grandAvg,      data_timelockD_grandAvg     );  title('timelock grand avg all');    saveas(h, [grandAvg_path 'grandAvg_timelock_all-mag.pdf']);     close(h);
-h = figure();   ft_multiplotER( cfg, data_grandAvg_timelock_high, data_timelockU_grandAvg_high, data_timelockD_grandAvg_high);  title('timelock grand avg high');   saveas(h, [grandAvg_path 'grandAvg_timelock_high-mag.pdf']);    close(h);
-h = figure();   ft_multiplotER( cfg, data_grandAvg_timelock_mid,  data_timelockU_grandAvg_mid,  data_timelockD_grandAvg_mid );  title('timelock grand avg mid');    saveas(h, [grandAvg_path 'grandAvg_timelock_mid-mag.pdf']);     close(h);
-h = figure();   ft_multiplotER( cfg, data_grandAvg_timelock_low,  data_timelockU_grandAvg_low,  data_timelockD_grandAvg_low );  title('timelock grand avg low');    saveas(h, [grandAvg_path 'grandAvg_timelock_low-mag.pdf']);     close(h);
+h = figure();   ft_multiplotER( cfg, data_grandAvg_timelock,      data_timelockU_grandAvg,      data_timelockD_grandAvg     );  title('timelock grand avg all');    saveas(h, [grandAvg_path 'grandAvg_resp_coh_timelock_all-mag.pdf']);     close(h);
+h = figure();   ft_multiplotER( cfg, data_grandAvg_timelock_high, data_timelockU_grandAvg_high, data_timelockD_grandAvg_high);  title('timelock grand avg high');   saveas(h, [grandAvg_path 'grandAvg_resp_coh_timelock_high-mag.pdf']);    close(h);
+h = figure();   ft_multiplotER( cfg, data_grandAvg_timelock_mid,  data_timelockU_grandAvg_mid,  data_timelockD_grandAvg_mid );  title('timelock grand avg mid');    saveas(h, [grandAvg_path 'grandAvg_resp_coh_timelock_mid-mag.pdf']);     close(h);
+h = figure();   ft_multiplotER( cfg, data_grandAvg_timelock_low,  data_timelockU_grandAvg_low,  data_timelockD_grandAvg_low );  title('timelock grand avg low');    saveas(h, [grandAvg_path 'grandAvg_resp_coh_timelock_low-mag.pdf']);     close(h);
 cfg.layout = 'neuromag306planar.lay';
-h = figure();   ft_multiplotER( cfg, data_grandAvg_timelock,      data_timelockU_grandAvg,      data_timelockD_grandAvg     );  title('timelock grand avg all');    saveas(h, [grandAvg_path 'grandAvg_timelock_all-grad.pdf']);     close(h);
-h = figure();   ft_multiplotER( cfg, data_grandAvg_timelock_high, data_timelockU_grandAvg_high, data_timelockD_grandAvg_high);  title('timelock grand avg high');   saveas(h, [grandAvg_path 'grandAvg_timelock_high-grad.pdf']);    close(h);
-h = figure();   ft_multiplotER( cfg, data_grandAvg_timelock_mid,  data_timelockU_grandAvg_mid,  data_timelockD_grandAvg_mid );  title('timelock grand avg mid');    saveas(h, [grandAvg_path 'grandAvg_timelock_mid-grad.pdf']);     close(h);
-h = figure();   ft_multiplotER( cfg, data_grandAvg_timelock_low,  data_timelockU_grandAvg_low,  data_timelockD_grandAvg_low );  title('timelock grand avg low');    saveas(h, [grandAvg_path 'grandAvg_timelock_low-grad.pdf']);     close(h);
+h = figure();   ft_multiplotER( cfg, data_grandAvg_timelock,      data_timelockU_grandAvg,      data_timelockD_grandAvg     );  title('timelock grand avg all');    saveas(h, [grandAvg_path 'grandAvg_resp_coh_timelock_all-grad.pdf']);     close(h);
+h = figure();   ft_multiplotER( cfg, data_grandAvg_timelock_high, data_timelockU_grandAvg_high, data_timelockD_grandAvg_high);  title('timelock grand avg high');   saveas(h, [grandAvg_path 'grandAvg_resp_coh_timelock_high-grad.pdf']);    close(h);
+h = figure();   ft_multiplotER( cfg, data_grandAvg_timelock_mid,  data_timelockU_grandAvg_mid,  data_timelockD_grandAvg_mid );  title('timelock grand avg mid');    saveas(h, [grandAvg_path 'grandAvg_resp_coh_timelock_mid-grad.pdf']);     close(h);
+h = figure();   ft_multiplotER( cfg, data_grandAvg_timelock_low,  data_timelockU_grandAvg_low,  data_timelockD_grandAvg_low );  title('timelock grand avg low');    saveas(h, [grandAvg_path 'grandAvg_resp_coh_timelock_low-grad.pdf']);     close(h);
 
 % freq
 cfg             = [];
@@ -300,53 +301,54 @@ cfg.ylim        = [0 3e-27];
     % 1-100
 cfg.xlim   = [1 100];
 cfg.layout = 'neuromag306mag.lay';
-h = figure();   ft_multiplotER( cfg, data_grandAvg_freq             );  title('freq grand avg all');    saveas(h, [grandAvg_path 'grandAvg_freq-1-100_all-mag.pdf']);     close(h);
-h = figure();   ft_multiplotER( cfg, data_grandAvg_freq_high        );  title('freq grand avg high');   saveas(h, [grandAvg_path 'grandAvg_freq-1-100_high-mag.pdf']);    close(h);
-h = figure();   ft_multiplotER( cfg, data_grandAvg_freq_mid         );  title('freq grand avg mid');    saveas(h, [grandAvg_path 'grandAvg_freq-1-100_mid-mag.pdf']);     close(h);
-h = figure();   ft_multiplotER( cfg, data_grandAvg_freq_low         );  title('freq grand avg low');    saveas(h, [grandAvg_path 'grandAvg_freq-1-100_low-mag.pdf']);     close(h);
+h = figure();   ft_multiplotER( cfg, data_grandAvg_freq             );  title('freq grand avg all');    saveas(h, [grandAvg_path 'grandAvg_resp_coh_freq-1-100_all-mag.pdf']);     close(h);
+h = figure();   ft_multiplotER( cfg, data_grandAvg_freq_high        );  title('freq grand avg high');   saveas(h, [grandAvg_path 'grandAvg_resp_coh_freq-1-100_high-mag.pdf']);    close(h);
+h = figure();   ft_multiplotER( cfg, data_grandAvg_freq_mid         );  title('freq grand avg mid');    saveas(h, [grandAvg_path 'grandAvg_resp_coh_freq-1-100_mid-mag.pdf']);     close(h);
+h = figure();   ft_multiplotER( cfg, data_grandAvg_freq_low         );  title('freq grand avg low');    saveas(h, [grandAvg_path 'grandAvg_resp_coh_freq-1-100_low-mag.pdf']);     close(h);
 cfg.layout = 'neuromag306planar.lay';
-h = figure();   ft_multiplotER( cfg, data_grandAvg_freq             );  title('freq grand avg all');    saveas(h, [grandAvg_path 'grandAvg_freq-1-100_all-grad.pdf']);    close(h);
-h = figure();   ft_multiplotER( cfg, data_grandAvg_freq_high        );  title('freq grand avg high');   saveas(h, [grandAvg_path 'grandAvg_freq-1-100_high-grad.pdf']);   close(h);
-h = figure();   ft_multiplotER( cfg, data_grandAvg_freq_mid         );  title('freq grand avg mid');    saveas(h, [grandAvg_path 'grandAvg_freq-1-100_mid-grad.pdf']);    close(h);
-h = figure();   ft_multiplotER( cfg, data_grandAvg_freq_low         );  title('freq grand avg low');    saveas(h, [grandAvg_path 'grandAvg_freq-1-100_low-grad.pdf']);    close(h);
+h = figure();   ft_multiplotER( cfg, data_grandAvg_freq             );  title('freq grand avg all');    saveas(h, [grandAvg_path 'grandAvg_resp_coh_freq-1-100_all-grad.pdf']);    close(h);
+h = figure();   ft_multiplotER( cfg, data_grandAvg_freq_high        );  title('freq grand avg high');   saveas(h, [grandAvg_path 'grandAvg_resp_coh_freq-1-100_high-grad.pdf']);   close(h);
+h = figure();   ft_multiplotER( cfg, data_grandAvg_freq_mid         );  title('freq grand avg mid');    saveas(h, [grandAvg_path 'grandAvg_resp_coh_freq-1-100_mid-grad.pdf']);    close(h);
+h = figure();   ft_multiplotER( cfg, data_grandAvg_freq_low         );  title('freq grand avg low');    saveas(h, [grandAvg_path 'grandAvg_resp_coh_freq-1-100_low-grad.pdf']);    close(h);
     % 1-40
 cfg.xlim   = [1 40];
 cfg.layout = 'neuromag306mag.lay';
-h = figure();   ft_multiplotER( cfg, data_grandAvg_freq             );  title('freq grand avg all');    saveas(h, [grandAvg_path 'grandAvg_freq-1-40_all-mag.pdf']);     close(h);
-h = figure();   ft_multiplotER( cfg, data_grandAvg_freq_high        );  title('freq grand avg high');   saveas(h, [grandAvg_path 'grandAvg_freq-1-40_high-mag.pdf']);    close(h);
-h = figure();   ft_multiplotER( cfg, data_grandAvg_freq_mid         );  title('freq grand avg mid');    saveas(h, [grandAvg_path 'grandAvg_freq-1-40_mid-mag.pdf']);     close(h);
-h = figure();   ft_multiplotER( cfg, data_grandAvg_freq_low         );  title('freq grand avg low');    saveas(h, [grandAvg_path 'grandAvg_freq-1-40_low-mag.pdf']);     close(h);
+h = figure();   ft_multiplotER( cfg, data_grandAvg_freq             );  title('freq grand avg all');    saveas(h, [grandAvg_path 'grandAvg_resp_coh_freq-1-40_all-mag.pdf']);     close(h);
+h = figure();   ft_multiplotER( cfg, data_grandAvg_freq_high        );  title('freq grand avg high');   saveas(h, [grandAvg_path 'grandAvg_resp_coh_freq-1-40_high-mag.pdf']);    close(h);
+h = figure();   ft_multiplotER( cfg, data_grandAvg_freq_mid         );  title('freq grand avg mid');    saveas(h, [grandAvg_path 'grandAvg_resp_coh_freq-1-40_mid-mag.pdf']);     close(h);
+h = figure();   ft_multiplotER( cfg, data_grandAvg_freq_low         );  title('freq grand avg low');    saveas(h, [grandAvg_path 'grandAvg_resp_coh_freq-1-40_low-mag.pdf']);     close(h);
 cfg.layout = 'neuromag306planar.lay';
-h = figure();   ft_multiplotER( cfg, data_grandAvg_freq             );  title('freq grand avg all');    saveas(h, [grandAvg_path 'grandAvg_freq-1-40_all-grad.pdf']);    close(h);
-h = figure();   ft_multiplotER( cfg, data_grandAvg_freq_high        );  title('freq grand avg high');   saveas(h, [grandAvg_path 'grandAvg_freq-1-40_high-grad.pdf']);   close(h);
-h = figure();   ft_multiplotER( cfg, data_grandAvg_freq_mid         );  title('freq grand avg mid');    saveas(h, [grandAvg_path 'grandAvg_freq-1-40_mid-grad.pdf']);    close(h);
-h = figure();   ft_multiplotER( cfg, data_grandAvg_freq_low         );  title('freq grand avg low');    saveas(h, [grandAvg_path 'grandAvg_freq-1-40_low-grad.pdf']);    close(h);
+h = figure();   ft_multiplotER( cfg, data_grandAvg_freq             );  title('freq grand avg all');    saveas(h, [grandAvg_path 'grandAvg_resp_coh_freq-1-40_all-grad.pdf']);    close(h);
+h = figure();   ft_multiplotER( cfg, data_grandAvg_freq_high        );  title('freq grand avg high');   saveas(h, [grandAvg_path 'grandAvg_resp_coh_freq-1-40_high-grad.pdf']);   close(h);
+h = figure();   ft_multiplotER( cfg, data_grandAvg_freq_mid         );  title('freq grand avg mid');    saveas(h, [grandAvg_path 'grandAvg_resp_coh_freq-1-40_mid-grad.pdf']);    close(h);
+h = figure();   ft_multiplotER( cfg, data_grandAvg_freq_low         );  title('freq grand avg low');    saveas(h, [grandAvg_path 'grandAvg_resp_coh_freq-1-40_low-grad.pdf']);    close(h);
 
 % tf
 cfg             = [];
 cfg.showlabels  = 'no';	
-cfg.zlim        = [-7e-27 7e-27];
     % 1-100
-cfg.xlim   = [1 100];
+cfg.ylim   = [1 100];
+cfg.zlim   = [-7e-27 7e-27];
 cfg.layout = 'neuromag306mag.lay';
-h = figure();   ft_multiplotTFR(cfg, data_grandAvg_freq_varWind     );  title('freq grand avg all');    saveas(h, [grandAvg_path 'grandAvg_freq-1-100_varWind_all-mag.pdf']);     close(h);
-h = figure();   ft_multiplotTFR(cfg, data_grandAvg_freq_varWind_high);  title('freq grand avg high');   saveas(h, [grandAvg_path 'grandAvg_freq-1-100_varWind_high-mag.pdf']);    close(h);
-h = figure();   ft_multiplotTFR(cfg, data_grandAvg_freq_varWind_mid );  title('freq grand avg mid');    saveas(h, [grandAvg_path 'grandAvg_freq-1-100_varWind_mid-mag.pdf']);     close(h);
-h = figure();   ft_multiplotTFR(cfg, data_grandAvg_freq_varWind_low );  title('freq grand avg low');    saveas(h, [grandAvg_path 'grandAvg_freq-1-100_varWind_low-mag.pdf']);     close(h);
+h = figure();   ft_multiplotTFR(cfg, data_grandAvg_freq_varWind     );  title('freq grand avg all');    saveas(h, [grandAvg_path 'grandAvg_resp_coh_freq-1-100_varWind_all-mag.pdf']);     close(h);
+h = figure();   ft_multiplotTFR(cfg, data_grandAvg_freq_varWind_high);  title('freq grand avg high');   saveas(h, [grandAvg_path 'grandAvg_resp_coh_freq-1-100_varWind_high-mag.pdf']);    close(h);
+h = figure();   ft_multiplotTFR(cfg, data_grandAvg_freq_varWind_mid );  title('freq grand avg mid');    saveas(h, [grandAvg_path 'grandAvg_resp_coh_freq-1-100_varWind_mid-mag.pdf']);     close(h);
+h = figure();   ft_multiplotTFR(cfg, data_grandAvg_freq_varWind_low );  title('freq grand avg low');    saveas(h, [grandAvg_path 'grandAvg_resp_coh_freq-1-100_varWind_low-mag.pdf']);     close(h);
 cfg.layout = 'neuromag306planar.lay';
-h = figure();   ft_multiplotTFR(cfg, data_grandAvg_freq_varWind     );  title('freq grand avg all');    saveas(h, [grandAvg_path 'grandAvg_freq-1-100_varWind_all-grad.pdf']);    close(h);
-h = figure();   ft_multiplotTFR(cfg, data_grandAvg_freq_varWind_high);  title('freq grand avg high');   saveas(h, [grandAvg_path 'grandAvg_freq-1-100_varWind_high-grad.pdf']);   close(h);
-h = figure();   ft_multiplotTFR(cfg, data_grandAvg_freq_varWind_mid );  title('freq grand avg mid');    saveas(h, [grandAvg_path 'grandAvg_freq-1-100_varWind_mid-grad.pdf']);    close(h);
-h = figure();   ft_multiplotTFR(cfg, data_grandAvg_freq_varWind_low );  title('freq grand avg low');    saveas(h, [grandAvg_path 'grandAvg_freq-1-100_varWind_low-grad.pdf']);    close(h);
+h = figure();   ft_multiplotTFR(cfg, data_grandAvg_freq_varWind     );  title('freq grand avg all');    saveas(h, [grandAvg_path 'grandAvg_resp_coh_freq-1-100_varWind_all-grad.pdf']);    close(h);
+h = figure();   ft_multiplotTFR(cfg, data_grandAvg_freq_varWind_high);  title('freq grand avg high');   saveas(h, [grandAvg_path 'grandAvg_resp_coh_freq-1-100_varWind_high-grad.pdf']);   close(h);
+h = figure();   ft_multiplotTFR(cfg, data_grandAvg_freq_varWind_mid );  title('freq grand avg mid');    saveas(h, [grandAvg_path 'grandAvg_resp_coh_freq-1-100_varWind_mid-grad.pdf']);    close(h);
+h = figure();   ft_multiplotTFR(cfg, data_grandAvg_freq_varWind_low );  title('freq grand avg low');    saveas(h, [grandAvg_path 'grandAvg_resp_coh_freq-1-100_varWind_low-grad.pdf']);    close(h);
     % 1-40
-cfg.xlim   = [1 40];
+cfg.ylim   = [1 40];
+cfg.zlim   = [-2e-26 2e-26];
 cfg.layout = 'neuromag306mag.lay';
-h = figure();   ft_multiplotTFR(cfg, data_grandAvg_freq_varWind     );  title('freq grand avg all');    saveas(h, [grandAvg_path 'grandAvg_freq-1-40_varWind_all-mag.pdf']);     close(h);
-h = figure();   ft_multiplotTFR(cfg, data_grandAvg_freq_varWind_high);  title('freq grand avg high');   saveas(h, [grandAvg_path 'grandAvg_freq-1-40_varWind_high-mag.pdf']);    close(h);
-h = figure();   ft_multiplotTFR(cfg, data_grandAvg_freq_varWind_mid );  title('freq grand avg mid');    saveas(h, [grandAvg_path 'grandAvg_freq-1-40_varWind_mid-mag.pdf']);     close(h);
-h = figure();   ft_multiplotTFR(cfg, data_grandAvg_freq_varWind_low );  title('freq grand avg low');    saveas(h, [grandAvg_path 'grandAvg_freq-1-40_varWind_low-mag.pdf']);     close(h);
+h = figure();   ft_multiplotTFR(cfg, data_grandAvg_freq_varWind     );  title('freq grand avg all');    saveas(h, [grandAvg_path 'grandAvg_resp_coh_freq-1-40_varWind_all-mag.pdf']);     close(h);
+h = figure();   ft_multiplotTFR(cfg, data_grandAvg_freq_varWind_high);  title('freq grand avg high');   saveas(h, [grandAvg_path 'grandAvg_resp_coh_freq-1-40_varWind_high-mag.pdf']);    close(h);
+h = figure();   ft_multiplotTFR(cfg, data_grandAvg_freq_varWind_mid );  title('freq grand avg mid');    saveas(h, [grandAvg_path 'grandAvg_resp_coh_freq-1-40_varWind_mid-mag.pdf']);     close(h);
+h = figure();   ft_multiplotTFR(cfg, data_grandAvg_freq_varWind_low );  title('freq grand avg low');    saveas(h, [grandAvg_path 'grandAvg_resp_coh_freq-1-40_varWind_low-mag.pdf']);     close(h);
 cfg.layout = 'neuromag306planar.lay';
-h = figure();   ft_multiplotTFR(cfg, data_grandAvg_freq_varWind     );  title('freq grand avg all');    saveas(h, [grandAvg_path 'grandAvg_freq-1-40_varWind_all-grad.pdf']);    close(h);
-h = figure();   ft_multiplotTFR(cfg, data_grandAvg_freq_varWind_high);  title('freq grand avg high');   saveas(h, [grandAvg_path 'grandAvg_freq-1-40_varWind_high-grad.pdf']);   close(h);
-h = figure();   ft_multiplotTFR(cfg, data_grandAvg_freq_varWind_mid );  title('freq grand avg mid');    saveas(h, [grandAvg_path 'grandAvg_freq-1-40_varWind_mid-grad.pdf']);    close(h);
-h = figure();   ft_multiplotTFR(cfg, data_grandAvg_freq_varWind_low );  title('freq grand avg low');    saveas(h, [grandAvg_path 'grandAvg_freq-1-40_varWind_low-grad.pdf']);    close(h);
+h = figure();   ft_multiplotTFR(cfg, data_grandAvg_freq_varWind     );  title('freq grand avg all');    saveas(h, [grandAvg_path 'grandAvg_resp_coh_freq-1-40_varWind_all-grad.pdf']);    close(h);
+h = figure();   ft_multiplotTFR(cfg, data_grandAvg_freq_varWind_high);  title('freq grand avg high');   saveas(h, [grandAvg_path 'grandAvg_resp_coh_freq-1-40_varWind_high-grad.pdf']);   close(h);
+h = figure();   ft_multiplotTFR(cfg, data_grandAvg_freq_varWind_mid );  title('freq grand avg mid');    saveas(h, [grandAvg_path 'grandAvg_resp_coh_freq-1-40_varWind_mid-grad.pdf']);    close(h);
+h = figure();   ft_multiplotTFR(cfg, data_grandAvg_freq_varWind_low );  title('freq grand avg low');    saveas(h, [grandAvg_path 'grandAvg_resp_coh_freq-1-40_varWind_low-grad.pdf']);    close(h);
