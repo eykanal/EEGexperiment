@@ -1,15 +1,15 @@
 % load data
-subj = [];
+if ~exist('h','var') || ~exist('l','var')
+    h(1) = load('17-tf-resp-coh-h');
+    h(2) = load('18-tf-resp-coh-h');
+    h(3) = load('19-tf-resp-coh-h');
 
-subj.h(1) = load('17-tf-resp-coh-h');
-subj.h(2) = load('18-tf-resp-coh-h');
-subj.h(3) = load('19-tf-resp-coh-h');
+    l(1) = load('17-tf-resp-coh-l');
+    l(2) = load('18-tf-resp-coh-l');
+    l(3) = load('19-tf-resp-coh-l');
+end
 
-subj.l(1) = load('17-tf-resp-coh-l');
-subj.l(2) = load('18-tf-resp-coh-l');
-subj.l(3) = load('19-tf-resp-coh-l');
-
-path    = fileparts(which([subj.h(1) '.mat']));
+path    = fileparts(which('17-tf-resp-coh-h.mat'));
 grandAvg_path = '/Volumes/ShadyBackBowls/meg_data/Dots/grandAvg/';
 
 % account for fact that some sets have different channels selected than
@@ -18,9 +18,9 @@ a=[];
 for n=1:2
     for m=1:3
         if n==1
-            a(3*(n-1)+m).chan = vertcat(subj.h(m).data_freq_varWind.label{:});
+            a(3*(n-1)+m).chan = vertcat(h(m).data_freq_varWind.label{:});
         else
-            a(3*(n-1)+m).chan = vertcat(subj.l(m).data_freq_varWind.label{:});
+            a(3*(n-1)+m).chan = vertcat(l(m).data_freq_varWind.label{:});
         end
     end
 end
@@ -32,18 +32,22 @@ end
 
 c = cellstr(b);
 
-cfg = [];
-cfg.method              = 'distance';
-cfg.channel             = c;
-cfg.layout              = 'neuromag306mag.lay';
-neighbours              = ft_neighbourselection(cfg, subj.h(1).data_freq_varWind);
+for n=1:3
+    h(n).data_freq_varWind = ft_selectdata(h(n).data_freq_varWind, 'channel', c);
+    l(n).data_freq_varWind = ft_selectdata(l(n).data_freq_varWind, 'channel', c);
+end
 
 % non-parametric analysis (from
 % http://fieldtrip.fcdonders.nl/tutorial/cluster_permutation_freq#within_subjects_experiments)
 cfg = [];
-cfg.channel             = c;
-cfg.latency             = [-0.7 -0.2];
-cfg.frequency           = [10 10];
+cfg.method              = 'distance';
+cfg.layout              = 'neuromag306mag.lay';
+neighbours              = ft_neighbourselection(cfg, h(1).data_freq_varWind);
+
+cfg = [];
+%cfg.latency             = [-0.7 0.1];
+cfg.frequency           = [8 12];
+cfg.avgoverfreq         = 'yes';
 cfg.method              = 'montecarlo';
 cfg.statistic           = 'depsamplesT';
 cfg.correctm            = 'cluster';
@@ -53,7 +57,7 @@ cfg.minbchan            = 2;
 cfg.tail                = 0;
 cfg.clustertail         = 0;
 cfg.alpha               = 0.025;
-cfg.numrandomization    = 500;
+cfg.numrandomization    = 2000;
 cfg.neighbours          = neighbours;
 
 Nsub = 3;
@@ -62,79 +66,35 @@ cfg.design(2,1:2*Nsub)  = [1:Nsub 1:Nsub];
 cfg.ivar                = 1; % the 1st row in cfg.design contains the independent variable
 cfg.uvar                = 2; % the 2nd row in cfg.design contains the subject number
 
-stat = ft_freqstatistics(cfg, subj.h(:).data_freq_varWind, subj.l(:).data_freq_varWind);
+stat = ft_freqstatistics(cfg, h(:).data_freq_varWind, l(:).data_freq_varWind);
 
 % difference freq_varWind data
-data_grandAvg_freq_varWind_diff = data_grandAvg_freq_varWind_high;
-data_grandAvg_freq_varWind_diff.powspctrm = data_grandAvg_freq_varWind_high.powspctrm - data_grandAvg_freq_varWind_low.powspctrm;
+freq_varWind_hi = ft_freqgrandaverage([], h(:).data_freq_varWind);
+freq_varWind_lo = ft_freqgrandaverage([], l(:).data_freq_varWind);
+
+freq_varWind_diff = freq_varWind_hi;
+freq_varWind_diff.powspctrm = freq_varWind_hi.powspctrm - freq_varWind_lo.powspctrm;
+
+freq_varWind_diff = ft_selectdata(freq_varWind_diff, 'channel', c);
 
 % make a plot
 cfg = [];
-cfg.style     = 'blank';
-cfg.layout    = 'neuromag306mag.lay';
-cfg.highlight = 'on';
-cfg.highlightchannel = find(stat.mask);
-cfg.comment   = 'no';
-figure; ft_topoplotER(cfg, data_grandAvg_freq_varWind_diff)
+cfg.channel             = c;
+cfg.style               = 'blank';
+cfg.layout              = 'neuromag306mag.lay';
+cfg.highlight           = 'on';
+cfg.highlightchannel    = find(sum(stat.mask,3)>0);
+cfg.comment             = 'no';
+
+figure();
+ft_topoplotTFR(cfg, freq_varWind_diff);
 title('Nonparametric: significant with cluster multiple comparison correction')    
 
-cfg = [];
-cfg.alpha  = 0.45;
-cfg.zparam = 'stat';
-cfg.zlim   = [-10 10];
-cfg.layout= 'neuromag306mag.lay';
-ft_clusterplot(cfg, stat);
+cfg                     = [];
+cfg.channel             = c;
+cfg.alpha               = 0.05;
+cfg.zparam              = 'stat';
+cfg.zlim                = [-10 10];
+cfg.layout              = 'neuromag306mag.lay';
 
-% Differencing
-% time
-data_grandAvg_timelock_diff = data_grandAvg_timelock_high;
-data_grandAvg_timelock_diff.avg = data_grandAvg_timelock_high.avg - data_grandAvg_timelock_low.avg;
-data_grandAvg_timelock_diff.var = data_grandAvg_timelock_high.var + data_grandAvg_timelock_low.var;
-% freq
-% run freq analysis
-cfg             = [];
-cfg.method      = 'mtmfft';
-cfg.output      = 'pow';
-cfg.calcdof     = 'yes';
-cfg.taper       = 'hanning';
-cfg.foilim      = [1 100];
-data_grandAvg_freq_diff = ft_freqanalysis(cfg, data_grandAvg_timelock_diff);
-% tfr
-cfg             = [];
-cfg.channel     = {'M*'};
-cfg.output      = 'pow';
-cfg.method      = 'mtmconvol';
-cfg.taper       = 'hanning';
-cfg.foi         = 1:1:100;
-cfg.t_ftimwin   = 5./cfg.foi;
-cfg.toi         = -0.1:0.05:0.7;
-cfg.verbose     = 0;
-data_grandAvg_freq_varWind = ft_freqanalysis(cfg, data_grandAvg_timelock_diff);
-    
-% %############################################
-% %##            SUBFUNCTIONS                ##
-% %############################################
-% 
-% % average all datafiles together;
-% function gAvg = grandAvg(datafiles)
-% % Load up all averaged datafiles
-% avgs = [];
-% for n=1:length(datafiles)
-%     avgs(n).avg = load(datafiles{n});
-%     avgs(n).avg = avgs(n).avg.data_timelock;
-% end
-% 
-% % Average them into one large grand-averaged file
-% cfg = [];
-% gAvg = ft_timelockgrandaverage(cfg, avgs(:).avg);
-% 
-% 
-% % perform differencing
-% function diffs = differenceAvgs(avg1, avg2)
-% diffs = avg1;
-% diffs.avg = avg1.avg - avg2.avg;
-% 
-% % extract relevant datasets
-% function subset = findSubset(all, pattern)
-% tmp     = (regexp(all, pattern));
-% subset  = all(~cellfun(@isempty,tmp));
+ft_clusterplot(cfg, stat)
